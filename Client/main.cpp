@@ -2,6 +2,8 @@
 #include <string>
 #include <regex>
 
+#include "../Packet/Packet.hpp"
+
 const std::string *splitIpPort(char *ipPortString) {
     std::string arg = ipPortString;
     size_t pos = arg.find(":");
@@ -45,5 +47,9 @@ int main(int ac, char** av) {
     }
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
+
+    Packet p(0, "Hello world");
+    p.printData();
+
     return 0;
 }
