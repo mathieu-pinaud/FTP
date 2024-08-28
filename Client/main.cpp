@@ -3,6 +3,7 @@
 #include <cstring>
 #include <regex>
 #include "../Socket/Socket.hpp"
+#include "../Utils/Utils.hpp"
 
 const std::string *splitIpPort(char *ipPortString) {
     std::string arg = ipPortString;
@@ -75,7 +76,10 @@ int main(int ac, char** av) {
     }
     if(action == DOWNLOAD) {
         // fonction download
+        Packet p = Packet(readFileToUint8Vector(av[3]));
+        p.printData();
     }
+
 
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
