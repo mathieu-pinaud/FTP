@@ -32,6 +32,7 @@ const std::string *splitIpPort(char *ipPortString) {
 enum TransferAction check_args(int ac, char **av) {
     if (ac != 4) {
         std::cerr << "Usage: " << av[0] << " <ip:port> -upload/-download <filename>" << std::endl;
+        return NONE;
     }
 
     if(std::strcmp(av[2], "-upload") == 0) {
