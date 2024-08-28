@@ -26,7 +26,7 @@ public:
     bool connectSocket(const char* ip, int port);
     
     bool sendPacket(int clientFd, Packet message, int size);
-    Packet receivePacket();
+    Packet receivePacket(int fd);
 
     int getSocketFd() {return socketFd;};
     struct sockaddr_in getAddress() {return address;};

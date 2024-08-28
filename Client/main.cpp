@@ -48,7 +48,7 @@ enum TransferAction check_args(int ac, char **av) {
     return NONE;
 }
 
-int startClient(std::string ip, int port) {
+int startClient(std::string ip, int port, Packet p) {
     Socket client;
     if (client.createSocket() == false) {
         return 1;
@@ -57,7 +57,10 @@ int startClient(std::string ip, int port) {
         return 1;
     }
     std::cout << "Client started on " << ip << ":" << port << std::endl;
-    Packet response = client.receivePacket();
+
+    p.printData();
+    client.sendPacket(client.getSocketFd(), p, p.getDataSize());
+    Packet response = client.receivePacket(-42);
     response.printData();
     return 0;
 }
@@ -71,9 +74,9 @@ int main(int ac, char** av) {
     if (ipPort == NULL) {
         return 1;
     }
-
+    Packet p = Packet(1, "");
     if(action == UPLOAD) {
-        Packet p = Packet(readFileToUint8Vector(av[3]));
+        p.fromBytes(readFileToUint8Vector(av[3]));
         p.printData();    
     }
     
@@ -85,5 +88,5 @@ int main(int ac, char** av) {
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
 
-    return startClient(ipPort[0], std::stoi(ipPort[1]));
+    return startClient(ipPort[0], std::stoi(ipPort[1]), p);
 }
