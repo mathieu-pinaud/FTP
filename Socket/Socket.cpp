@@ -72,8 +72,6 @@ Packet Socket::receivePacket()
         return Packet(0, "");
     }
     std::vector<uint8_t> bytes(buffer, buffer + bytesReceived);
-    std::string dataStr(bytes.begin() + 5, bytes.end());
-    std::cout << "DataTest: " << dataStr.c_str() << std::endl;
     Packet response = Packet(bytes);
     return response;
 }
