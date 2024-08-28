@@ -43,7 +43,8 @@ enum TransferAction check_args(int ac, char **av) {
     if(std::strcmp(av[2], "-download") == 0) {
         return DOWNLOAD;
     }
-
+    
+    std::cerr << "Usage: " << av[0] << " <ip:port> -upload/-download <filename>" << std::endl;
     return NONE;
 }
 
@@ -72,12 +73,12 @@ int main(int ac, char** av) {
     }
 
     if(action == UPLOAD) {
-        // fonction upload
-    }
-    if(action == DOWNLOAD) {
-        // fonction download
         Packet p = Packet(readFileToUint8Vector(av[3]));
-        p.printData();
+        p.printData();    
+    }
+    
+    if(action == DOWNLOAD) {
+       
     }
 
 
