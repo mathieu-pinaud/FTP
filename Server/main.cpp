@@ -13,26 +13,35 @@ std::string getServerAddress() {
     void *tmpAddrPtr = NULL;
     std::string address;
 
+    // Get the list of network interfaces
     getifaddrs(&ifAddrStruct);
 
+    // Iterate through the network interfaces
     for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr) {
             continue;
         }
-        // check it is IP4 and not a loopback address
+        // Check if it is an IPv4 address and not a loopback address
         if (ifa->ifa_addr->sa_family == AF_INET && strcmp(ifa->ifa_name, "lo") != 0) { 
             tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
             char addressBuffer[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
             address = addressBuffer;
-            break;
+            
+            // Avoid WSL internal network addresses (e.g., those starting with "172.")
+            if (address.find("172.") != 0) {
+                break;
+            }
         }
     }
+    
+    // Free the memory allocated for network interfaces
     if (ifAddrStruct != NULL) {
         freeifaddrs(ifAddrStruct);
-        return address;
     }
-    return NULL;
+    
+    // Return the found address or an empty string if none found
+    return address;
 }
 
 int startServer(std::string ip, int port) {
