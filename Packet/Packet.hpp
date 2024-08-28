@@ -16,7 +16,7 @@ class Packet {
         ~Packet() {};
 
         std::vector<uint8_t> toBytes();
-        Packet fromBytes(std::vector<uint8_t> bytes);
+        void fromBytes(std::vector<uint8_t> bytes);
 
         uint8_t getPacketType() { return packetType; }
         uint32_t getDataSize() { return dataSize; }
