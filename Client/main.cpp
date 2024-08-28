@@ -3,6 +3,7 @@
 #include <cstring>
 #include <regex>
 #include "../Socket/Socket.hpp"
+#include "../Utils/Utils.hpp"
 
 const std::string *splitIpPort(char *ipPortString) {
     std::string arg = ipPortString;
@@ -42,7 +43,8 @@ enum TransferAction check_args(int ac, char **av) {
     if(std::strcmp(av[2], "-download") == 0) {
         return DOWNLOAD;
     }
-
+    
+    std::cerr << "Usage: " << av[0] << " <ip:port> -upload/-download <filename>" << std::endl;
     return NONE;
 }
 
@@ -71,11 +73,14 @@ int main(int ac, char** av) {
     }
 
     if(action == UPLOAD) {
-        // fonction upload
+        Packet p = Packet(readFileToUint8Vector(av[3]));
+        p.printData();    
     }
+    
     if(action == DOWNLOAD) {
-        // fonction download
+       
     }
+
 
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;

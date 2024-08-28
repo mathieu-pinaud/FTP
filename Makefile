@@ -9,8 +9,8 @@ CC = g++
 CFLAGS = -g3 -Wall -Wextra -Werror 
 
 # Fichiers source
-SRC_SERVER = Server/main.cpp Packet/Packet.cpp Socket/Socket.cpp
-SRC_CLIENT = Client/main.cpp Packet/Packet.cpp Socket/Socket.cpp
+SRC_SERVER = Server/main.cpp Packet/Packet.cpp Socket/Socket.cpp Utils/Utils.cpp
+SRC_CLIENT = Client/main.cpp Packet/Packet.cpp Socket/Socket.cpp Utils/Utils.cpp
 
 # Fichiers objets
 OBJ_SERVER = $(SRC_SERVER:.cpp=.o)
