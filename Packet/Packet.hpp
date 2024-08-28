@@ -29,3 +29,9 @@ class Packet {
 
         void printData();
 };
+
+enum TransferAction {
+    NONE,
+    UPLOAD,
+    DOWNLOAD
+};

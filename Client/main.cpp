@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <regex>
 #include "../Socket/Socket.hpp"
 
@@ -28,12 +29,20 @@ const std::string *splitIpPort(char *ipPortString) {
     return args;
 }
 
-bool check_args(int ac, char **av) {
-    if (ac != 2) {
-        std::cerr << "Usage: " << av[0] << " <ip:port>" << std::endl;
-        return false;
+enum TransferAction check_args(int ac, char **av) {
+    if (ac != 4) {
+        std::cerr << "Usage: " << av[0] << " <ip:port> -upload/-download <filename>" << std::endl;
     }
-    return true;
+
+    if(std::strcmp(av[2], "-upload") == 0) {
+        return UPLOAD;
+    }
+    
+    if(std::strcmp(av[2], "-download") == 0) {
+        return DOWNLOAD;
+    }
+
+    return NONE;
 }
 
 int startClient(std::string ip, int port) {
@@ -51,13 +60,22 @@ int startClient(std::string ip, int port) {
 }
 
 int main(int ac, char** av) {
-    if (check_args(ac, av) == false) {
+    TransferAction action = check_args(ac, av);
+    if (action == NONE) {
         return 1;
     }
     const std::string *ipPort = splitIpPort(av[1]);
     if (ipPort == NULL) {
         return 1;
     }
+
+    if(action == UPLOAD) {
+        // fonction upload
+    }
+    if(action == DOWNLOAD) {
+        // fonction download
+    }
+
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
 
