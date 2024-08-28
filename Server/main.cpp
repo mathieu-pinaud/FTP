@@ -5,6 +5,7 @@
 #include <ifaddrs.h>
 #include <unistd.h>
 #include <cstring>
+#include "../Socket/Socket.hpp"
 
 std::string getServerAddress() {
     struct ifaddrs *ifAddrStruct = NULL;
@@ -34,6 +35,31 @@ std::string getServerAddress() {
     return NULL;
 }
 
+int startServer(std::string ip, int port) {
+    Socket server;
+    if (server.createSocket() == false) {
+        return 1;
+    }
+    if (server.bindSocket(ip.c_str(), port) == false) {
+        return 1;
+    }
+    if (server.listenSocket() == false) {
+        return 1;
+    }
+    std::cout << "Server started on " << ip << ":" << port << std::endl;
+    int clientFd = server.acceptSocket();
+    if (clientFd == -1) {
+        return 1;
+    }
+    std::cout << "Client connected" << std::endl;
+    Packet message(1, "Hello from server");
+    if (server.sendPacket(clientFd, message, message.getDataSize()) == false) {
+        std::cout << "Failed to send packet" << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
 int main(int ac, char **av) {
     if (ac != 2) {
         std::cerr << "Usage: " << av[0] << "<port>" << std::endl;
@@ -47,5 +73,6 @@ int main(int ac, char **av) {
     } else {
         std::cout << "Server IP: " << ip << std::endl;
     }
-    return 0;
+
+    return startServer(ip, port);
 }

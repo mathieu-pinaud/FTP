@@ -9,7 +9,6 @@ std::vector<uint8_t> Packet::toBytes() {
     bytes.push_back(packetType);
 
     for(int i = 3; i >= 0; --i) {
-        // En sah je comprends rien 💀
         bytes.push_back((dataSize >> (8 * i)) & 0xFF);
     }
     bytes.insert(bytes.end(), data.begin(), data.end());
@@ -20,15 +19,20 @@ std::vector<uint8_t> Packet::toBytes() {
  * Convertit une chaine d'octets en Packet
  */
 Packet Packet::fromBytes(std::vector<uint8_t> bytes) {
-    uint8_t packetType = bytes[0];
-    uint32_t dataSize = 0;
+    // Extraire le type de paquet (premier byte)
+    this->packetType = bytes[0];
 
+    // Extraire la taille des données (bytes 1 à 4)
+    uint32_t dataSize = 0;
     for (int i = 0; i < 4; ++i) {
-        // En sah je comprends rien 💀
-        dataSize |= (bytes[i + 1] << (8 * (3 - i)));
+        this->dataSize |= (bytes[i + 1] << (8 * (3 - i)));
     }
-    std::vector<uint8_t> data(bytes.begin() + 5, bytes.end());
-    return Packet(packetType, data);
+
+    // Extraire les données (à partir du byte 5 jusqu'à la taille des données)
+    std::vector<uint8_t> dataBytes(bytes.begin() + 5, bytes.begin()+ 5 + dataSize);
+    int i = dataSize;
+    this->data = dataBytes;
+    return *this;
 }
 
 
@@ -42,9 +46,6 @@ void Packet::setDataFromStr(const char* str) {
 
 
 void Packet::printData() {
-    std::cout << "Data: ";
-    for (uint8_t byte : data) {
-        std::cout << (char)byte;
-    }
-    std::cout << std::endl;
+    std::string dataStr(this->data.begin(), this->data.end());  
+    std::cout << "Data: " << dataStr.c_str() << std::endl;
 }

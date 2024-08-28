@@ -1,8 +1,7 @@
 #include <iostream>
 #include <string>
 #include <regex>
-
-#include "../Packet/Packet.hpp"
+#include "../Socket/Socket.hpp"
 
 const std::string *splitIpPort(char *ipPortString) {
     std::string arg = ipPortString;
@@ -37,6 +36,20 @@ bool check_args(int ac, char **av) {
     return true;
 }
 
+int startClient(std::string ip, int port) {
+    Socket client;
+    if (client.createSocket() == false) {
+        return 1;
+    }
+    if (client.connectSocket(ip.c_str(), port) == false) {
+        return 1;
+    }
+    std::cout << "Client started on " << ip << ":" << port << std::endl;
+    Packet response = client.receivePacket();
+    response.printData();
+    return 0;
+}
+
 int main(int ac, char** av) {
     if (check_args(ac, av) == false) {
         return 1;
@@ -48,8 +61,5 @@ int main(int ac, char** av) {
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
 
-    Packet p(0, "Hello world");
-    p.printData();
-
-    return 0;
+    return startClient(ipPort[0], std::stoi(ipPort[1]));
 }

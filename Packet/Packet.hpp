@@ -11,7 +11,7 @@ class Packet {
         uint32_t dataSize;
     
     public:
-        Packet(uint8_t packetType, std::vector<uint8_t>) : packetType(packetType), data(data), dataSize(data.size()) {}
+        Packet(std::vector<uint8_t> bytes) { fromBytes(bytes); }
         Packet(uint8_t packetType, const char* data) : packetType(packetType) { setDataFromStr(data); }
         ~Packet() {};
 

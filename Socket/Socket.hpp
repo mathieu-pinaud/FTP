@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <arpa/inet.h>
-
+#include "../Packet/Packet.hpp"
 
 class Socket
 {
@@ -15,7 +15,7 @@ private:
     struct sockaddr_in address;
 
 public:
-    Socket(): socketFd(0) {memset(&address, 0, sizeof(address))};
+    Socket(): socketFd(0) {memset(&address, 0, sizeof(address));};
     ~Socket() {closeSocket();};
 
     bool createSocket();
@@ -23,6 +23,8 @@ public:
     bool listenSocket();
     int acceptSocket();
     bool closeSocket();
+    bool connectSocket(const char* ip, int port);
+    
     bool sendPacket(int clientFd, Packet message, int size);
     Packet receivePacket();
 
