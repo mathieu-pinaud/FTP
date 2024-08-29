@@ -57,7 +57,6 @@ int startClient(std::string ip, int port, Packet p) {
         return 1;
     }
     std::cout << "Client started on " << ip << ":" << port << std::endl;
-    std::cout << "size" << p.getDataSize() << std::endl;
     client.sendPacket(client.getSocketFd(), p, p.getDataSize());
     Packet response = client.receivePacket(-42);
     response.printData();
@@ -75,8 +74,7 @@ int main(int ac, char** av) {
     }
     Packet p = Packet(1, "");
     if(action == UPLOAD) {
-        Packet p = Packet(readFileToUint8Vector(av[3]));
-        std::cout << "size" << p.getDataSize() << std::endl;
+        p = Packet(readFileToUint8Vector(av[3]));
     }
     
     if(action == DOWNLOAD) {
@@ -86,6 +84,5 @@ int main(int ac, char** av) {
 
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
-
     return startClient(ipPort[0], std::stoi(ipPort[1]), p);
 }
