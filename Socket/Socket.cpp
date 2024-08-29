@@ -56,11 +56,11 @@ bool Socket::closeSocket()
 bool Socket::sendPacket(int clientFd, Packet message, int size)
 {
     std::vector<uint8_t> packet = message.toBytes();
-    char buffer[1024] = {0};
-    for (int i = 0; i < size + 5; i++) {
+    char buffer[100000] = {0};
+    for (int i = 0; i < size + 15; i++) {
         buffer[i] = packet[i];
     }
-    if (send(clientFd, buffer, size + 5, 0) == -1) {
+    if (send(clientFd, buffer, size + 15, 0) == -1) {
         std::cerr << "Failed to send packet" << std::endl;
         return false;
     }
@@ -69,7 +69,7 @@ bool Socket::sendPacket(int clientFd, Packet message, int size)
 
 Packet Socket::receivePacket(int fd)
 {
-    char buffer[1024] = {0};
+    char buffer[100000] = {0};
     //cas client
     if (fd == -42) {
         fd = this->socketFd;

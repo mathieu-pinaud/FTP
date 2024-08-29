@@ -11,7 +11,7 @@ std::vector<uint8_t> Packet::toBytes() {
     std::vector<uint8_t> bytes;
     bytes.push_back(packetType);
 
-    for(int i = 3; i >= 0; --i) {
+    for (int i = 7; i >= 0; --i) { // 64 bits = 8 octets
         bytes.push_back((dataSize >> (8 * i)) & 0xFF);
     }
     bytes.insert(bytes.end(), data.begin(), data.end());
@@ -25,14 +25,13 @@ void Packet::fromBytes(std::vector<uint8_t> bytes) {
     // Extraire le type de paquet (premier byte)
     packetType = bytes[0];
 
-    // Extraire la taille des données (bytes 1 à 4)
-    uint32_t dataSizecount = 0;
-    for (int i = 0; i < 4; ++i) {
-        dataSizecount |= (bytes[i + 1] << (8 * (3 - i)));
+    uint64_t dataSizecount = 0;
+    for (int i = 0; i < 8; ++i) { // 64 bits = 8 octets
+        dataSizecount |= (static_cast<uint64_t>(bytes[i + 1]) << (8 * (7 - i)));
     }
     dataSize=dataSizecount;
-    // Extraire les données (à partir du byte 5 jusqu'à la taille des données)
-    std::vector<uint8_t> dataBytes(bytes.begin() + 5, bytes.begin()+ 5 + dataSize);
+    // Extraire les données (à partir du byte 9 jusqu'à la taille des données)
+    std::vector<uint8_t> dataBytes(bytes.begin() + 9, bytes.begin()+ 9 + dataSize);
     data = dataBytes;
 }
 
@@ -58,6 +57,14 @@ void Packet::copyFile(std::string filename) {
 }
 
 void Packet::printData() {
-    std::string dataStr(this->data.begin(), this->data.end());
-    std::cout << "Data: " << dataStr.c_str() << std::endl;
+    std::cout << "Packet type: " << (int)this->packetType << std::endl;
+    std::cout << "Data size: " << this->dataSize << std::endl;
+    int type = (int)this->packetType;
+    if(type == 1) {
+        std::string dataStr(this->data.begin(), this->data.end());
+        std::cout << "Data: " << dataStr.c_str() << std::endl;
+    }else if(type == 2) {
+        this->copyFile("test copie.png");
+    }
+    return;
 }
