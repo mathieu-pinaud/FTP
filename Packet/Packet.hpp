@@ -20,7 +20,7 @@ class Packet {
     private:
         enum PacketType packetType;
         std::vector<uint8_t> data;
-        uint32_t dataSize;
+        uint64_t dataSize;
     
     public:
         Packet(std::vector<uint8_t> bytes) { fromBytes(bytes); }

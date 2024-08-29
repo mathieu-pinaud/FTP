@@ -62,7 +62,9 @@ int startServer(std::string ip, int port) {
         return 1;
     }
     std::cout << "Client connected" << std::endl;
-    Packet message(PacketType::MESSAGE, "Hello from server");
+    Packet uploaded = server.receivePacket(clientFd);
+    uploaded.printData();
+    Packet message(PacketType::MESSAGE, "Paquet recu");
     if (server.sendPacket(clientFd, message, message.getDataSize()) == false) {
         std::cout << "Failed to send packet" << std::endl;
         return 1;

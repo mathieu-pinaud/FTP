@@ -29,11 +29,11 @@ std::vector<uint8_t> readFileToUint8Vector(const char* filename) {
 
     // Create header
     std::vector<uint8_t> header;
-    uint8_t type = 1; // 1 bit for the type, assuming it's 1
+    uint8_t type = 2; // 1 bit for the type, assuming it's 1
     header.push_back(type);
 
     // Add the size of the data (4 bytes)
-    for (int i = 3; i >= 0; --i) {
+    for (int i = 7; i >= 0; --i) {
         header.push_back((size >> (8 * i)) & 0xFF);
     }
     std::vector<uint8_t> result;

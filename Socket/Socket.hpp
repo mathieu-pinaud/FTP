@@ -28,7 +28,7 @@ public:
     bool connectSocket(const char* ip, int port);
     
     bool sendPacket(int clientFd, Packet message, int size);
-    Packet receivePacket();
+    Packet receivePacket(int fd);
 
     void createFileFromPacket(Packet packet, std::string filename);
 
