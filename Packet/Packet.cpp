@@ -9,7 +9,7 @@
  */
 std::vector<uint8_t> Packet::toBytes() {
     std::vector<uint8_t> bytes;
-    bytes.push_back(packetType);
+    bytes.push_back(static_cast<uint8_t>(packetType));
 
     for(int i = 3; i >= 0; --i) {
         bytes.push_back((dataSize >> (8 * i)) & 0xFF);
@@ -23,7 +23,7 @@ std::vector<uint8_t> Packet::toBytes() {
  */
 void Packet::fromBytes(std::vector<uint8_t> bytes) {
     // Extraire le type de paquet (premier byte)
-    packetType = bytes[0];
+    packetType = static_cast<PacketType>(bytes[0]);
 
     // Extraire la taille des données (bytes 1 à 4)
     uint32_t dataSize = 0;
@@ -46,17 +46,6 @@ void Packet::setDataFromStr(const char* str) {
     dataSize = data.size();
 }
 
-
-void Packet::copyFile(std::string filename) {
-    std::vector<std::string> filenameVector = split(filename, ".");
-    std::string newFilename = filenameVector[0].append(" (Copy).").append(filenameVector[1]);
-    std::ofstream newFile;
-    newFile.open(newFilename.c_str(), std::ios_base::binary);
-    for (const auto& byte : this->data) {
-        newFile.write(reinterpret_cast<const char*>(this->data.data()), this->data.size());
-    }
-    newFile.close();
-}
 
 void Packet::printData() {
     std::string dataStr(this->data.begin(), this->data.end());  

@@ -69,7 +69,7 @@ Packet Socket::receivePacket()
     ssize_t bytesReceived = recv(this->socketFd, buffer, sizeof(buffer), 0);
     if (bytesReceived <=  0) {
         std::cerr << "Failed to receive packet" << std::endl;
-        return Packet(0, "");
+        return Packet(PacketType::MESSAGE, "");
     }
     std::vector<uint8_t> bytes(buffer, buffer + bytesReceived);
     Packet response = Packet(bytes);
@@ -87,4 +87,19 @@ bool Socket::connectSocket(const char* ip, int port)
         return false;
     }
     return true;
+}
+
+void Socket::createFileFromPacket(Packet packet, std::string filename) {
+    std::string filePath = "";
+    if(this->isServer) {
+        filePath.append("Storage/").append(filename);
+    }
+    std::ofstream newFile;
+    newFile.open(filePath.c_str(), std::ios_base::binary);
+    for (const uint8_t byte : packet.getData()) {
+        newFile.write(reinterpret_cast<const char*>(&byte), sizeof(byte));
+    }
+    
+    std::cout << "File successfully copied" << std::endl; 
+    newFile.close();
 }

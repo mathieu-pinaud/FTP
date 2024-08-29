@@ -72,16 +72,6 @@ int main(int ac, char** av) {
         return 1;
     }
 
-    if(action == UPLOAD) {
-        Packet p = Packet(readFileToUint8Vector(av[3]));
-        p.copyFile(std::string(av[3]));    
-    }
-    
-    if(action == DOWNLOAD) {
-       
-    }
-
-
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
 
