@@ -1,5 +1,8 @@
 #include <iostream>
+#include <iomanip>
+#include <fstream>
 #include "Packet.hpp"
+#include "../Utils/Utils.hpp"
 
 /**
  * Convertit un Packet en chaine d'octets
@@ -42,6 +45,17 @@ void Packet::setDataFromStr(const char* str) {
     dataSize = data.size();
 }
 
+
+void Packet::copyFile(std::string filename) {
+    std::vector<std::string> filenameVector = split(filename, ".");
+    std::string newFilename = filenameVector[0].append(" (Copy).").append(filenameVector[1]);
+    std::ofstream newFile;
+    newFile.open(newFilename.c_str(), std::ios_base::binary);
+    for (const auto& byte : this->data) {
+        newFile.write(reinterpret_cast<const char*>(this->data.data()), this->data.size());
+    }
+    newFile.close();
+}
 
 void Packet::printData() {
     std::string dataStr(this->data.begin(), this->data.end());

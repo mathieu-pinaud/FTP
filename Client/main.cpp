@@ -75,7 +75,8 @@ int main(int ac, char** av) {
     }
     Packet p = Packet(1, "");
     if(action == UPLOAD) {
-         p.fromBytes(readFileToUint8Vector(av[3]));
+        Packet p = Packet(readFileToUint8Vector(av[3]));
+        p.copyFile(std::string(av[3]));    
     }
     
     if(action == DOWNLOAD) {
