@@ -44,19 +44,6 @@ void Packet::setDataFromStr(const char* str) {
     dataSize = data.size();
 }
 
-
-void Packet::copyFile(std::string filename) {
-        std::cout << "sizeClient" << this->getDataSize() << std::endl;
-    std::vector<std::string> filenameVector = split(filename, ".");
-    std::string newFilename = filenameVector[0].append(" (Copy).").append(filenameVector[1]);
-    std::ofstream newFile;
-    newFile.open(newFilename.c_str(), std::ios_base::binary);
-    for (const uint8_t byte : this->data) {
-        newFile.write(reinterpret_cast<const char*>(&byte), sizeof(byte));
-    }
-    newFile.close();
-}
-
 void Packet::printData() {
     std::cout << "Packet type: " << (int)this->packetType << std::endl;
     std::cout << "Data size: " << this->dataSize << std::endl;
@@ -64,8 +51,6 @@ void Packet::printData() {
     if(type == 1) {
         std::string dataStr(this->data.begin(), this->data.end());
         std::cout << "Data: " << dataStr.c_str() << std::endl;
-    }else if(type == 2) {
-        this->copyFile("tests.png");
     }
     return;
 }

@@ -17,8 +17,8 @@ private:
     bool isServer = false;
 
 public:
-    Socket(): socketFd(0) {memset(&address, 0, sizeof(address));};
-    ~Socket() {closeSocket();};
+    Socket(): socketFd(0) {memset(&address, 0, sizeof(address));}
+    ~Socket() {closeSocket();}
 
     bool createSocket();
     bool bindSocket(const char* ip, int port);

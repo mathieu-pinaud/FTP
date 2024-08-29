@@ -63,6 +63,11 @@ int startServer(std::string ip, int port) {
     }
     std::cout << "Client connected" << std::endl;
     Packet uploaded = server.receivePacket(clientFd);
+
+    if(uploaded.getPacketType() == PacketType::FILE) {
+        server.createFileFromPacket(uploaded, std::string("Test.png"));
+    }
+
     uploaded.printData();
     Packet message(PacketType::MESSAGE, "Paquet recu");
     if (server.sendPacket(clientFd, message, message.getDataSize()) == false) {

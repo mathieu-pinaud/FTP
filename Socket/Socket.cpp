@@ -56,7 +56,7 @@ bool Socket::closeSocket()
 bool Socket::sendPacket(int clientFd, Packet message, int size)
 {
     std::vector<uint8_t> packet = message.toBytes();
-    char buffer[100000] = {0};
+    char* buffer = (char*)malloc(sizeof(char) * 10000000);
     for (int i = 0; i < size + 15; i++) {
         buffer[i] = packet[i];
     }
@@ -67,21 +67,41 @@ bool Socket::sendPacket(int clientFd, Packet message, int size)
     return true;
 }
 
-Packet Socket::receivePacket(int fd)
-{
-    char buffer[100000] = {0};
-    //cas client
-    if (fd == -42) {
-        fd = this->socketFd;
+Packet Socket::receivePacket(int clientFd)
+{   
+    // int headerSize = 5;
+    // char* headerBuffer = (char*)malloc(sizeof(char) * headerSize);
+    PacketHeader packetHeader;
+    // if(headerBuffer == 0) {
+    //     std::cout << "Error buffer ??" << std::endl;
+    // }
+
+    if (clientFd == -42) {
+        clientFd = this->socketFd;
     }
-    ssize_t bytesReceived = recv(fd, buffer, sizeof(buffer), 0);
-    if (bytesReceived <=  0) {
+
+    ssize_t headerBytesReceived = recv(clientFd, &packetHeader, sizeof(PacketHeader), 0);
+    if (headerBytesReceived <=  0) {
         std::cerr << "Failed to receive packet" << std::endl;
         return Packet(PacketType::MESSAGE, "");
     }
-    std::vector<uint8_t> packet(buffer, buffer + bytesReceived);
-    Packet response = Packet(packet);
-    return response;
+    char *dataBuffer = (char*)malloc(sizeof(char) * packetHeader.size);
+
+    ssize_t dataBytesReceived = recv(clientFd, &dataBuffer, packetHeader.size, 0);
+
+
+
+    // char* buffer = (char*)malloc(sizeof(char) * 10000000);
+    // //cas client
+    // ssize_t bytesReceived = recv(clientFd, buffer, 10000000, 0);
+
+    // std::vector<uint8_t> packet(headerBytesReceived, dataBuffer);
+    
+    // std::cout << "truc1" << bytesReceived << std::endl;
+    // Packet response = Packet(packet);
+    std::cout << "truc2" << std::endl;
+
+    // return response;
 }
 
 bool Socket::connectSocket(const char* ip, int port)

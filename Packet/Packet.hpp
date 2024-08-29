@@ -41,3 +41,8 @@ class Packet {
 
         void printData();
 };
+
+struct PacketHeader {
+    PacketType type;
+    uint32_t size;
+};
