@@ -27,6 +27,7 @@ class Packet {
         void setData(const std::vector<uint8_t> data) { this->data = data; }
         void setDataFromStr(const char* str);
 
+        void copyFile(std::string filename);
         void printData();
 };
 
