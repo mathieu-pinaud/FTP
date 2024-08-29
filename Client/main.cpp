@@ -58,7 +58,6 @@ int startClient(std::string ip, int port, Packet p) {
     }
     std::cout << "Client started on " << ip << ":" << port << std::endl;
 
-    p.printData();
     client.sendPacket(client.getSocketFd(), p, p.getDataSize());
     Packet response = client.receivePacket(-42);
     response.printData();
@@ -76,8 +75,7 @@ int main(int ac, char** av) {
     }
     Packet p = Packet(1, "");
     if(action == UPLOAD) {
-        p.fromBytes(readFileToUint8Vector(av[3]));
-        p.printData();    
+         p.fromBytes(readFileToUint8Vector(av[3]));
     }
     
     if(action == DOWNLOAD) {

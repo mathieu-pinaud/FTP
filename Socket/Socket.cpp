@@ -56,7 +56,11 @@ bool Socket::closeSocket()
 bool Socket::sendPacket(int clientFd, Packet message, int size)
 {
     std::vector<uint8_t> packet = message.toBytes();
-    if (send(clientFd, packet.data(), size + 5, 0) == -1) {
+    char buffer[1024] = {0};
+    for (int i = 0; i < size + 5; i++) {
+        buffer[i] = packet[i];
+    }
+    if (send(clientFd, buffer, size + 5, 0) == -1) {
         std::cerr << "Failed to send packet" << std::endl;
         return false;
     }
@@ -75,8 +79,8 @@ Packet Socket::receivePacket(int fd)
         std::cerr << "Failed to receive packet" << std::endl;
         return Packet(0, "");
     }
-    std::vector<uint8_t> bytes(buffer, buffer + bytesReceived);
-    Packet response = Packet(bytes);
+    std::vector<uint8_t> packet(buffer, buffer + bytesReceived);
+    Packet response = Packet(packet);
     return response;
 }
 

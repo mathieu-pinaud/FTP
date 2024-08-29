@@ -23,14 +23,13 @@ void Packet::fromBytes(std::vector<uint8_t> bytes) {
     packetType = bytes[0];
 
     // Extraire la taille des données (bytes 1 à 4)
-    uint32_t dataSize = 0;
+    uint32_t dataSizecount = 0;
     for (int i = 0; i < 4; ++i) {
-        dataSize |= (bytes[i + 1] << (8 * (3 - i)));
+        dataSizecount |= (bytes[i + 1] << (8 * (3 - i)));
     }
-
+    dataSize=dataSizecount;
     // Extraire les données (à partir du byte 5 jusqu'à la taille des données)
     std::vector<uint8_t> dataBytes(bytes.begin() + 5, bytes.begin()+ 5 + dataSize);
-    int i = dataSize;
     data = dataBytes;
 }
 
@@ -45,6 +44,6 @@ void Packet::setDataFromStr(const char* str) {
 
 
 void Packet::printData() {
-    std::string dataStr(this->data.begin(), this->data.end());  
+    std::string dataStr(this->data.begin(), this->data.end());
     std::cout << "Data: " << dataStr.c_str() << std::endl;
 }
