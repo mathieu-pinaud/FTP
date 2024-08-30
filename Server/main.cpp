@@ -5,6 +5,7 @@
 #include <ifaddrs.h>
 #include <unistd.h>
 #include <cstring>
+#include "../Socket/Socket.hpp"
 
 std::string getServerAddress() {
     struct ifaddrs *ifAddrStruct = NULL;
@@ -12,26 +13,69 @@ std::string getServerAddress() {
     void *tmpAddrPtr = NULL;
     std::string address;
 
+    // Get the list of network interfaces
     getifaddrs(&ifAddrStruct);
 
+    // Iterate through the network interfaces
     for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr) {
             continue;
         }
-        // check it is IP4 and not a loopback address
+        // Check if it is an IPv4 address and not a loopback address
         if (ifa->ifa_addr->sa_family == AF_INET && strcmp(ifa->ifa_name, "lo") != 0) { 
             tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
             char addressBuffer[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
             address = addressBuffer;
-            break;
+            
+            // Avoid WSL internal network addresses (e.g., those starting with "172.")
+            if (address.find("172.") != 0) {
+                break;
+            }
         }
     }
+    
+    // Free the memory allocated for network interfaces
     if (ifAddrStruct != NULL) {
         freeifaddrs(ifAddrStruct);
-        return address;
     }
-    return NULL;
+    
+    // Return the found address or an empty string if none found
+    return address;
+}
+
+int startServer(std::string ip, int port) {
+    Socket server;
+    server.setIsServer(true);
+    if (server.createSocket() == false) {
+        return 1;
+    }
+    if (server.bindSocket(ip.c_str(), port) == false) {
+        return 1;
+    }
+    if (server.listenSocket() == false) {
+        return 1;
+    }
+    std::cout << "Server started on " << ip << ":" << port << std::endl;
+    int clientFd = server.acceptSocket();
+    if (clientFd == -1) {
+        return 1;
+    }
+    std::cout << "Client connected" << std::endl;
+    Packet uploaded = server.receivePacket(clientFd);
+
+    // if(uploaded.getPacketType() == PacketType::FILE) {
+    //     server.createFileFromPacket(uploaded, std::string("Test.png"));
+    // }
+
+    //uploaded.printData();
+    // std::cout << "Data mere" << std::endl;
+    // Packet message(PacketType::MESSAGE, "Paquet recu");
+    // if (server.sendPacket(clientFd, message, message.getDataSize()) == false) {
+    //     std::cout << "Failed to send packet" << std::endl;
+    //     return 1;
+    // }
+    return 0;
 }
 
 int main(int ac, char **av) {
@@ -47,5 +91,6 @@ int main(int ac, char **av) {
     } else {
         std::cout << "Server IP: " << ip << std::endl;
     }
-    return 0;
+
+    return startServer(ip, port);
 }

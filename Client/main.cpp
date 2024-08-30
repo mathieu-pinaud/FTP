@@ -1,8 +1,9 @@
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <regex>
-
-#include "../Packet/Packet.hpp"
+#include "../Socket/Socket.hpp"
+#include "../Utils/Utils.hpp"
 
 const std::string *splitIpPort(char *ipPortString) {
     std::string arg = ipPortString;
@@ -29,27 +30,58 @@ const std::string *splitIpPort(char *ipPortString) {
     return args;
 }
 
-bool check_args(int ac, char **av) {
-    if (ac != 2) {
-        std::cerr << "Usage: " << av[0] << " <ip:port>" << std::endl;
-        return false;
+enum TransferAction check_args(int ac, char **av) {
+    if (ac != 4) {
+        std::cerr << "Usage: " << av[0] << " <ip:port> -upload/-download <filename>" << std::endl;
+        return NONE;
     }
-    return true;
+
+    if(std::strcmp(av[2], "-upload") == 0) {
+        return UPLOAD;
+    }
+    
+    if(std::strcmp(av[2], "-download") == 0) {
+        return DOWNLOAD;
+    }
+    
+    std::cerr << "Usage: " << av[0] << " <ip:port> -upload/-download <filename>" << std::endl;
+    return NONE;
+}
+
+int startClient(std::string ip, int port, Packet& p) {
+    Socket client;
+    if (client.createSocket() == false) {
+        return 1;
+    }
+    if (client.connectSocket(ip.c_str(), port) == false) {
+        return 1;
+    }
+    std::cout << "Client started on " << ip << ":" << port << std::endl;
+    client.sendPacket(client.getSocketFd(), p, p.getDataSize());
+    // Packet response = client.receivePacket(-42);
+    // response.printData();
+    return 0;
 }
 
 int main(int ac, char** av) {
-    if (check_args(ac, av) == false) {
+    TransferAction action = check_args(ac, av);
+    if (action == NONE) {
         return 1;
     }
     const std::string *ipPort = splitIpPort(av[1]);
     if (ipPort == NULL) {
         return 1;
     }
+    Packet p = Packet(PacketType::MESSAGE, "");
+    if(action == UPLOAD) {
+        p = Packet(readFileToUint8Vector(av[3]));
+    }
+    
+    if(action == DOWNLOAD) {
+       
+    }
+
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
-
-    Packet p(0, "Hello world");
-    p.printData();
-
-    return 0;
+    return startClient(ipPort[0], std::stoi(ipPort[1]), p);
 }
