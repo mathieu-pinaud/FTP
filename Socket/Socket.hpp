@@ -8,6 +8,7 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include "../Packet/Packet.hpp"
+#include "../Utils/Utils.hpp"
 
 class Socket
 {

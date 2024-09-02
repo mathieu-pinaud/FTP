@@ -59,7 +59,7 @@ bool Socket::sendPacket(int clientFd, Packet message)
     std::vector<uint8_t> packet = message.toBytes();
     int packetSize = packet.size() + sizeof(PacketHeader); // Size includes header size
     ssize_t totalSent = 0;
-    
+    std::cout << "Sent packet" << std::endl;
     while (totalSent < packetSize) {
         ssize_t bytesSent = send(clientFd, packet.data() + totalSent, packetSize - totalSent, 0);
         if (bytesSent == -1) {
@@ -68,7 +68,7 @@ bool Socket::sendPacket(int clientFd, Packet message)
         }
         totalSent += bytesSent;
     }
-    
+    std::cout << "Sent packet" << std::endl;
     return true;
 }
 
@@ -167,7 +167,15 @@ Packet Socket::receivePacket(int clientFd) {
         std::cout << "Received " << totalReceived << " bytes for data" << std::endl;
     }
 
+    std::string dataString(dataBuffer, dataSize);
     std::cout << filenameBuffer << std::endl;
+    if (packetHeader.type == PacketType::DOWNLOAD) {
+        std::cout << "Received download packet" << std::endl;
+        std::cout << dataString << std::endl;
+        dataString = "Storage/" + dataString;
+        return Packet(readFileToUint8Vector(dataString.c_str(), PacketType::UPLOAD));
+    }
+
     createFileFromPacket(dataBuffer, std::string(filenameBuffer, filenameSize), dataSize);
     // Libération de la mémoire
     free(filenameBuffer);
@@ -196,12 +204,15 @@ void Socket::createFileFromPacket(char *data, std::string filename, ssize_t data
     if(this->isServer) {
         filePath.append("Storage/").append(filename);
     }
+    else {
+        filePath.append("Downloads/").append(filename);
+    }
     std::cout<< filePath << std::endl;
     std::ofstream newFile;
     newFile.open(filePath.c_str(), std::ios_base::binary);
     
     newFile.write(data, dataSize);
     
-    std::cout << "File successfully copied" << std::endl; 
+    std::cout << "File successfully copied" << filePath << std::endl; 
     newFile.close();
 }

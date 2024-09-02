@@ -13,7 +13,8 @@ enum TransferAction : uint8_t {
 enum class PacketType : uint8_t {
     MESSAGE,
     PASSWORD,
-    FILE
+    UPLOAD,
+    DOWNLOAD
 };
 
 class Packet {
