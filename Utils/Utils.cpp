@@ -1,4 +1,5 @@
 #include "Utils.hpp"
+#include "../Packet/Packet.hpp"
 
 // void test(char* filename) {
 //     std::ifstream file( &filename, std::ios::binary);
@@ -16,15 +17,22 @@
 //     }
 // }
 
-std::vector<uint8_t> readFileToUint8Vector(const char* filename) {
+std::vector<uint8_t> readFileToUint8Vector(const char* filename, PacketType type) {
     std::ifstream file( filename, std::ios::binary);
+    std::string filename_str = filename;
     if (!file.is_open()) {
         std::cerr << "Unable to open file: " << filename << std::endl;
         return {0};
     }
 
-    //Chnge filename to vector
-    std::string filename_str = filename;
+    if (type == PacketType::UPLOAD) {
+        const std::string prefix = "Storage/";
+        if (filename_str.rfind(prefix, 0) == 0) {
+            filename_str = filename_str.substr(prefix.length());
+        }
+    }
+    std::cout << "Filename: " << filename_str << std::endl;
+    //Change filename to vector
     std::vector<uint8_t> filename_vector(filename_str.begin(), filename_str.end());
     size_t filename_size = filename_vector.size();
 
@@ -34,8 +42,8 @@ std::vector<uint8_t> readFileToUint8Vector(const char* filename) {
 
     // Create header
     std::vector<uint8_t> header;
-    uint8_t type = 2; // 1 bit for the type, assuming it's 1
-    header.push_back(type);
+    // 1 bit for the type, assuming it's 1
+    header.push_back(static_cast<uint8_t>(type));
 
     // Add the size of the filename (4 bytes)
     for (int i = 7; i >= 0; --i) {

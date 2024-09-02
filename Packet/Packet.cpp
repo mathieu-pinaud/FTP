@@ -69,6 +69,7 @@ void Packet::setDataFromStr(const char* str) {
     for(int i = 0; str[i] != '\0'; ++i) {
         data.push_back(str[i]);
     }
+    filenameSize = 0;
     dataSize = data.size();
 }
 

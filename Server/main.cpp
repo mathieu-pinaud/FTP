@@ -62,19 +62,18 @@ int startServer(std::string ip, int port) {
         return 1;
     }
     std::cout << "Client connected" << std::endl;
-    Packet uploaded = server.receivePacket(clientFd);
-
-    // if(uploaded.getPacketType() == PacketType::FILE) {
-    //     server.createFileFromPacket(uploaded, std::string("Test.png"));
-    // }
-
-    //uploaded.printData();
-    // std::cout << "Data mere" << std::endl;
-    // Packet message(PacketType::MESSAGE, "Paquet recu");
-    // if (server.sendPacket(clientFd, message) == false) {
-    //     std::cout << "Failed to send packet" << std::endl;
-    //     return 1;
-    // }
+    Packet sent = server.receivePacket(clientFd);
+    std::vector<uint8_t> data = sent.getData();
+    //print data in hex
+    std::cout << "Received data: ";
+    for (uint8_t byte : data) {
+        std::cout << std::hex << (int)byte;
+    }
+    if (sent.getPacketType() == PacketType::UPLOAD) {
+        //print data in hex
+        std::cout << "Received download packet" << std::endl;
+        server.sendPacket(clientFd, sent);
+    }
     return 0;
 }
 
