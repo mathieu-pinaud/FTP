@@ -57,9 +57,9 @@ int startClient(std::string ip, int port, Packet p) {
         return 1;
     }
     std::cout << "Client started on " << ip << ":" << port << std::endl;
+    std::cout << "Data Size" << p.getDataSize() << std::endl;
     client.sendPacket(client.getSocketFd(), p, p.getDataSize());
-    Packet response = client.receivePacket(-42);
-    response.printData();
+    client.receivePacket(-42);
     return 0;
 }
 
@@ -84,5 +84,6 @@ int main(int ac, char** av) {
 
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
-    return startClient(ipPort[0], std::stoi(ipPort[1]), p);
+    int end = startClient(ipPort[0], std::stoi(ipPort[1]), p);
+    return end;
 }

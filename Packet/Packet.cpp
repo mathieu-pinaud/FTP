@@ -22,17 +22,32 @@ std::vector<uint8_t> Packet::toBytes() {
  * Convertit une chaine d'octets en Packet
  */
 void Packet::fromBytes(std::vector<uint8_t> bytes) {
+    std::cout << "Packet::fromBytes" << std::endl;
+    // Vérifier la taille minimale
+    if (bytes.size() < 9) {
+        std::cerr << "Byte vector is too small" << std::endl;
+        return; // ou lancer une exception
+    }
+
     // Extraire le type de paquet (premier byte)
     packetType = bytes[0];
 
+    // Extraire la taille des données (8 octets)
     uint64_t dataSizecount = 0;
-    for (int i = 0; i < 8; ++i) { // 64 bits = 8 octets
+    for (int i = 0; i < 8; ++i) {
         dataSizecount |= (static_cast<uint64_t>(bytes[i + 1]) << (8 * (7 - i)));
     }
-    dataSize=dataSizecount;
-    // Extraire les données (à partir du byte 9 jusqu'à la taille des données)
-    std::vector<uint8_t> dataBytes(bytes.begin() + 9, bytes.begin()+ 9 + dataSize);
-    data = dataBytes;
+    dataSize = dataSizecount;
+
+    // Vérifier que la taille des données est cohérente
+    if (dataSize > bytes.size() - 9) {
+        std::cerr << "Declared data size exceeds available data size" << std::endl;
+        return; // ou ajustez la taille des données selon les besoins
+    }
+    // Extraire les données
+    bytes.erase(bytes.begin(), bytes.begin() + 9);
+    data = bytes;
+    std::cout << "Data Size: " << dataSize << std::endl;
 }
 
 
@@ -46,15 +61,36 @@ void Packet::setDataFromStr(const char* str) {
 
 
 void Packet::copyFile(std::string filename) {
-        std::cout << "sizeClient" << this->getDataSize() << std::endl;
-    std::vector<std::string> filenameVector = split(filename, ".");
-    std::string newFilename = filenameVector[0].append(" (Copy).").append(filenameVector[1]);
-    std::ofstream newFile;
-    newFile.open(newFilename.c_str(), std::ios_base::binary);
-    for (const uint8_t byte : this->data) {
-        newFile.write(reinterpret_cast<const char*>(&byte), sizeof(byte));
+    std::cout << "début d'écriture "<< std::endl;
+    size_t lastDotPos = filename.find_last_of('.');
+    if (lastDotPos == std::string::npos) {
+        throw std::invalid_argument("Le nom de fichier ne contient pas de point ou est mal formé.");
+    }
+
+    std::string baseName = filename.substr(0, lastDotPos);
+    std::string extension = filename.substr(lastDotPos);
+    std::string newFilename = baseName + "_(Copy)" + extension;
+
+    std::ofstream newFile(newFilename, std::ios_base::binary | std::ios_base::trunc);
+    if (!newFile) {
+        throw std::ios_base::failure("Erreur lors de l'ouverture du fichier pour écriture.");
+    }
+
+    if (dataSize != data.size()) {
+        throw std::runtime_error("dataSize ne correspond pas à la taille réelle des données.");
+    }
+    newFile.write(reinterpret_cast<const char*>(data.data()), dataSize);
+    if (newFile.fail()) {
+        throw std::ios_base::failure("Erreur lors de l'écriture dans le fichier.");
+    }
+    newFile.flush();
+    if (newFile.fail()) {
+        throw std::ios_base::failure("Erreur lors de la vidange des tampons de sortie.");
     }
     newFile.close();
+    if (newFile.fail()) {
+        throw std::ios_base::failure("Erreur lors de la fermeture du fichier.");
+    }
 }
 
 void Packet::printData() {
@@ -65,7 +101,7 @@ void Packet::printData() {
         std::string dataStr(this->data.begin(), this->data.end());
         std::cout << "Data: " << dataStr.c_str() << std::endl;
     }else if(type == 2) {
-        this->copyFile("tests.png");
+        this->copyFile("test.zip");
     }
     return;
 }
