@@ -64,16 +64,17 @@ int startServer(std::string ip, int port) {
     std::cout << "Client connected" << std::endl;
     Packet uploaded = server.receivePacket(clientFd);
 
-    if(uploaded.getPacketType() == PacketType::FILE) {
-        server.createFileFromPacket(uploaded, std::string("Test.png"));
-    }
+    // if(uploaded.getPacketType() == PacketType::FILE) {
+    //     server.createFileFromPacket(uploaded, std::string("Test.png"));
+    // }
 
-    uploaded.printData();
-    Packet message(PacketType::MESSAGE, "Paquet recu");
-    if (server.sendPacket(clientFd, message, message.getDataSize()) == false) {
-        std::cout << "Failed to send packet" << std::endl;
-        return 1;
-    }
+    //uploaded.printData();
+    // std::cout << "Data mere" << std::endl;
+    // Packet message(PacketType::MESSAGE, "Paquet recu");
+    // if (server.sendPacket(clientFd, message) == false) {
+    //     std::cout << "Failed to send packet" << std::endl;
+    //     return 1;
+    // }
     return 0;
 }
 

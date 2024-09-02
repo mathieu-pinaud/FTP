@@ -19,8 +19,10 @@ enum class PacketType : uint8_t {
 class Packet {
     private:
         enum PacketType packetType;
-        std::vector<uint8_t> data;
         uint64_t dataSize;
+        uint64_t filenameSize;
+        std::vector<uint8_t> filename;
+        std::vector<uint8_t> data;
     
     public:
         Packet(std::vector<uint8_t> bytes) { fromBytes(bytes); }
@@ -44,5 +46,6 @@ class Packet {
 
 struct PacketHeader {
     PacketType type;
-    uint32_t size;
-};
+    uint64_t filenameSize;
+    uint64_t dataSize;    
+}__attribute((packed));

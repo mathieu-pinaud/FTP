@@ -12,29 +12,57 @@ std::vector<uint8_t> Packet::toBytes() {
     bytes.push_back(static_cast<uint8_t>(packetType));
 
     for (int i = 7; i >= 0; --i) { // 64 bits = 8 octets
+        bytes.push_back((filenameSize >> (8 * i)) & 0xFF);
+    }
+    for (int i = 7; i >= 0; --i) { // 64 bits = 8 octets
         bytes.push_back((dataSize >> (8 * i)) & 0xFF);
     }
+    bytes.insert(bytes.end(), filename.begin(), filename.end());
     bytes.insert(bytes.end(), data.begin(), data.end());
+    //print bytes in hexa
+    std::cout << "Packet bytes: ";
+    for (int i = 0; i < bytes.size(); ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)bytes[i] << " ";
+    }
     return bytes;
 }
 
-/**
- * Convertit une chaine d'octets en Packet
- */
 void Packet::fromBytes(std::vector<uint8_t> bytes) {
-    // Extraire le type de paquet (premier byte)
-    packetType = static_cast<PacketType>(bytes[0]);
+    size_t offset = 0;
+    // 1. Lire le PacketType
+    packetType = static_cast<PacketType>(bytes[offset]);
+    offset += 1;
 
-    uint64_t dataSizecount = 0;
-    for (int i = 0; i < 8; ++i) { // 64 bits = 8 octets
-        dataSizecount |= (static_cast<uint64_t>(bytes[i + 1]) << (8 * (7 - i)));
+    // 2. Lire FilenameSize (8 octets, big-endian)
+    uint64_t filenameSizeCount = 0;
+    for (int i = 0; i < sizeof(filenameSize); ++i) {
+        filenameSizeCount |= static_cast<uint64_t>(bytes[offset + i]) << (8 * (sizeof(filenameSize) - 1 - i));
     }
-    dataSize=dataSizecount;
-    // Extraire les données (à partir du byte 9 jusqu'à la taille des données)
-    std::vector<uint8_t> dataBytes(bytes.begin() + 9, bytes.begin()+ 9 + dataSize);
-    data = dataBytes;
-}
+    filenameSize = filenameSizeCount;
+    offset += sizeof(filenameSize);
 
+    // 3. Lire DataSize (8 octets, big-endian)
+    uint64_t dataSizeCount = 0;
+    for (int i = 0; i < sizeof(dataSize); ++i) {
+        dataSizeCount |= static_cast<uint64_t>(bytes[offset + i]) << (8 * (sizeof(dataSize) - 1 - i));
+    }
+    dataSize = dataSizeCount;
+    offset += sizeof(dataSize);
+
+    std::cout << "Filename size: " << filenameSize << std::endl;
+    std::cout << "Data size: " << dataSize << std::endl;
+    // Vérification de la taille totale pour éviter des débordements
+    if (bytes.size() < offset + filenameSize + dataSize) {
+        throw std::runtime_error("Taille de bytes insuffisante pour contenir le nom de fichier et les données.");
+    }
+
+    // 4. Lire Filename (FilenameSize octets)
+    filename.assign(bytes.begin() + offset, bytes.begin() + offset + filenameSize);
+    offset += filenameSize;
+
+    // 5. Lire Data (DataSize octets)
+    data.assign(bytes.begin() + offset, bytes.begin() + offset + dataSize);
+}
 
 void Packet::setDataFromStr(const char* str) {
     data.clear();

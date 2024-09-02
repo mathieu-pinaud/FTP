@@ -57,9 +57,7 @@ int startClient(std::string ip, int port, Packet& p) {
         return 1;
     }
     std::cout << "Client started on " << ip << ":" << port << std::endl;
-    client.sendPacket(client.getSocketFd(), p, p.getDataSize());
-    // Packet response = client.receivePacket(-42);
-    // response.printData();
+    client.sendPacket(client.getSocketFd(), p);
     return 0;
 }
 
@@ -74,17 +72,16 @@ int main(int ac, char** av) {
     }
     Packet p = Packet(PacketType::MESSAGE, "");
     if(action == UPLOAD) {
+        std::cout << "mabite"<< std::endl;
         p = Packet(readFileToUint8Vector(av[3]));
+        std::cout << "mabote"<< std::endl;
     }
     
     if(action == DOWNLOAD) {
        
     }
 
-
     std::cout << "IP: " << ipPort[0] << std::endl;
     std::cout << "Port: " << ipPort[1] << std::endl;
-    std::cout << "Data size " << p.getDataSize() << std::endl;
-
     return startClient(ipPort[0], std::stoi(ipPort[1]), p);
 }

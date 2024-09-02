@@ -5,6 +5,7 @@
 #include <string>
 #include <stdint.h>
 #include <vector>
+#include <limits>
 
 // void test(char* filename);
 std::vector<uint8_t> readFileToUint8Vector(const char* filename);
