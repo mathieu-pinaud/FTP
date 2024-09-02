@@ -19,6 +19,11 @@ std::vector<uint8_t> Packet::toBytes() {
     }
     bytes.insert(bytes.end(), filename.begin(), filename.end());
     bytes.insert(bytes.end(), data.begin(), data.end());
+    //print bytes in hexa
+    std::cout << "Packet bytes: ";
+    for (int i = 0; i < bytes.size(); ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)bytes[i] << " ";
+    }
     return bytes;
 }
 
