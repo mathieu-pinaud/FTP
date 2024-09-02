@@ -38,7 +38,7 @@ std::vector<uint8_t> readFileToUint8Vector(const char* filename) {
     header.push_back(type);
 
     // Add the size of the filename (4 bytes)
-    for (int i = 3; i >= 0; --i) {
+    for (int i = 7; i >= 0; --i) {
         header.push_back((filename_size >> (8 * i)) & 0xFF);
     }
 

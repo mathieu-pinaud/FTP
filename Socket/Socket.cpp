@@ -77,6 +77,7 @@ Packet Socket::receivePacket(int clientFd)
     PacketHeader packetHeader;
 
     ssize_t totalReceived = 0;
+    std::cout << sizeof(PacketHeader) << std::endl;
     while (totalReceived < sizeof(PacketHeader)) {
         ssize_t bytesReceived = recv(clientFd, reinterpret_cast<char*>(&packetHeader) + totalReceived, sizeof(PacketHeader) - totalReceived, 0);
         if (bytesReceived <= 0) {
@@ -85,31 +86,30 @@ Packet Socket::receivePacket(int clientFd)
         }
         totalReceived += bytesReceived;
     }
-    uint64_t filenameSize = 0;
-    for (int i = 0; i < sizeof(packetHeader.filenameSize); ++i) {
-        filenameSize |= static_cast<uint64_t>(reinterpret_cast<uint8_t*>(&packetHeader.filenameSize)[i]) << (8 * (sizeof(packetHeader.filenameSize) - 1 - i));
-    }
+    std::cout << totalReceived << std::endl;
+    std::cout << "Filename size: " << packetHeader.filenameSize << std::endl;
 
     uint64_t dataSize = 0;
     for (int i = 0; i < sizeof(packetHeader.size); ++i) {
         dataSize |= static_cast<uint64_t>(reinterpret_cast<uint8_t*>(&packetHeader.size)[i]) << (8 * (sizeof(packetHeader.size) - 1 - i));
     }
 
+    std::cout << "Data size: " << dataSize << std::endl;
 
     char *dataBuffer = (char*)malloc(dataSize);
     if (dataBuffer == nullptr) {
         std::cerr << "Failed to allocate memory for data buffer" << std::endl;
         return Packet(PacketType::MESSAGE, "");
     }
-    char *filenameBuffer = (char*)malloc(filenameSize);
+    char *filenameBuffer = (char*)malloc(packetHeader.filenameSize);
     if (filenameBuffer == nullptr) {
         std::cerr << "Failed to allocate memory for filename buffer" << std::endl;
         return Packet(PacketType::MESSAGE, "");
     }
 
     totalReceived = 0;
-    while (totalReceived < filenameSize) {
-        ssize_t bytesReceived = recv(clientFd, filenameBuffer + totalReceived, filenameSize - totalReceived, 0);
+    while (totalReceived < packetHeader.filenameSize) {
+        ssize_t bytesReceived = recv(clientFd, filenameBuffer + totalReceived, packetHeader.filenameSize - totalReceived, 0);
         if (bytesReceived <= 0) {
             std::cerr << "Failed to receive complete filename" << std::endl;
             free(filenameBuffer);

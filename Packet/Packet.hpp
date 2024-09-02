@@ -48,4 +48,4 @@ struct PacketHeader {
     PacketType type;
     uint64_t filenameSize;
     uint64_t size;    
-} __attribute__((packed));
+};
