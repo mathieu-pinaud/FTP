@@ -23,6 +23,11 @@ std::vector<uint8_t> readFileToUint8Vector(const char* filename) {
         return {0};
     }
 
+    //Chnge filename to vector
+    std::string filename_str = filename;
+    std::vector<uint8_t> filename_vector(filename_str.begin(), filename_str.end());
+    size_t filename_size = filename_vector.size();
+
     // Read file contents into a vector
     std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     ssize_t size = buffer.size();
@@ -32,13 +37,20 @@ std::vector<uint8_t> readFileToUint8Vector(const char* filename) {
     uint8_t type = 2; // 1 bit for the type, assuming it's 1
     header.push_back(type);
 
+    // Add the size of the filename (4 bytes)
+    for (int i = 3; i >= 0; --i) {
+        header.push_back((filename_size >> (8 * i)) & 0xFF);
+    }
+
     // Add the size of the data (4 bytes)
     for (int i = 7; i >= 0; --i) {
         header.push_back((size >> (8 * i)) & 0xFF);
     }
+
     std::vector<uint8_t> result;
-    result.reserve(header.size() + buffer.size());
+    result.reserve(header.size() + filename_size + size);
     result.insert(result.end(), header.begin(), header.end());
+    result.insert(result.end(), filename_vector.begin(), filename_vector.end());
     result.insert(result.end(), buffer.begin(), buffer.end());
     return result;
 }

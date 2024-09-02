@@ -85,14 +85,38 @@ Packet Socket::receivePacket(int clientFd)
         }
         totalReceived += bytesReceived;
     }
+    uint64_t filenameSize = 0;
+    for (int i = 0; i < sizeof(packetHeader.filenameSize); ++i) {
+        filenameSize |= static_cast<uint64_t>(reinterpret_cast<uint8_t*>(&packetHeader.filenameSize)[i]) << (8 * (sizeof(packetHeader.filenameSize) - 1 - i));
+    }
+
     uint64_t dataSize = 0;
     for (int i = 0; i < sizeof(packetHeader.size); ++i) {
         dataSize |= static_cast<uint64_t>(reinterpret_cast<uint8_t*>(&packetHeader.size)[i]) << (8 * (sizeof(packetHeader.size) - 1 - i));
     }
+
+
     char *dataBuffer = (char*)malloc(dataSize);
     if (dataBuffer == nullptr) {
         std::cerr << "Failed to allocate memory for data buffer" << std::endl;
         return Packet(PacketType::MESSAGE, "");
+    }
+    char *filenameBuffer = (char*)malloc(filenameSize);
+    if (filenameBuffer == nullptr) {
+        std::cerr << "Failed to allocate memory for filename buffer" << std::endl;
+        return Packet(PacketType::MESSAGE, "");
+    }
+
+    totalReceived = 0;
+    while (totalReceived < filenameSize) {
+        ssize_t bytesReceived = recv(clientFd, filenameBuffer + totalReceived, filenameSize - totalReceived, 0);
+        if (bytesReceived <= 0) {
+            std::cerr << "Failed to receive complete filename" << std::endl;
+            free(filenameBuffer);
+            free(dataBuffer);
+            return Packet(PacketType::MESSAGE, "");
+        }
+        totalReceived += bytesReceived;
     }
 
     totalReceived = 0;
@@ -106,11 +130,15 @@ Packet Socket::receivePacket(int clientFd)
         totalReceived += bytesReceived;
     }
     
+    //add /Storage/ to the filename
+    std::string filename = "/Storage/";
+    filename.append(filenameBuffer);
     // Sauvegarder les données reçues dans un fichier
-    std::ofstream newFile("Storage/testMat.mkv", std::ios_base::binary);    
+    std::ofstream newFile(filenameBuffer, std::ios_base::binary);    
     newFile.write(dataBuffer, dataSize);
     newFile.close();
 
+    free(filenameBuffer);
     free(dataBuffer);
 
     return Packet(PacketType::MESSAGE, ""); // Retourner un objet Packet avec les données

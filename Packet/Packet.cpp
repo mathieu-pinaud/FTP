@@ -18,30 +18,61 @@ std::vector<uint8_t> Packet::toBytes() {
     return bytes;
 }
 
-/**
- * Convertit une chaine d'octets en Packet
- */
 void Packet::fromBytes(std::vector<uint8_t> bytes) {
-    // Extraire le type de paquet (premier byte)
-    packetType = static_cast<PacketType>(bytes[0]);
+    size_t offset = 0;
 
-    // Lire la taille des données à partir des 8 octets suivants
-    uint64_t dataSizecount = 0;
-    for (int i = 0; i < 8; ++i) { // 64 bits = 8 octets
-        dataSizecount |= (static_cast<uint64_t>(bytes[i + 1]) << (8 * (7 - i)));
+    // 1. Lire le PacketType
+    packetType = static_cast<PacketType>(bytes[offset]);
+    offset += 1;
+
+    // 2. Lire FilenameSize (8 octets, supposons little-endian)
+    uint64_t filenameSize = 0;
+    for (int i = 0; i < sizeof(filenameSize); ++i) {
+        filenameSize |= static_cast<uint64_t>(bytes[offset + i]) << (8 * i);
     }
-    dataSize = dataSizecount;
+    offset += sizeof(filenameSize);
 
-    // Vérifier que la taille totale est cohérente
-    if (bytes.size() < 9 + dataSize) {
-        std::cerr << "Invalid data size: " << dataSize << std::endl;
-        return;
+    // 3. Lire DataSize (8 octets, supposons little-endian)
+    uint64_t dataSize = 0;
+    for (int i = 0; i < sizeof(dataSize); ++i) {
+        dataSize |= static_cast<uint64_t>(bytes[offset + i]) << (8 * i);
+    }
+    offset += sizeof(dataSize);
+
+    // Vérification de la taille totale pour éviter des débordements
+    if (bytes.size() < offset + filenameSize + dataSize) {
+        throw std::runtime_error("Taille de bytes insuffisante pour contenir le nom de fichier et les données.");
     }
 
-    // Extraire les données (à partir du 9ème byte jusqu'à la fin)
-    std::vector<uint8_t> dataBytes(bytes.begin() + 9, bytes.begin() + 9 + dataSize);
-    data = dataBytes;
+    // 4. Lire Filename (FilenameSize octets)
+    filename.assign(bytes.begin() + offset, bytes.begin() + offset + filenameSize);
+    offset += filenameSize;
+
+    // 5. Lire Data (DataSize octets)
+    data.assign(bytes.begin() + offset, bytes.begin() + offset + dataSize);
 }
+
+
+
+    // // Extraire le type de paquet (premier byte)
+
+    // // Lire la taille des données à partir des 8 octets suivants
+    // uint64_t dataSizecount = 0;
+    // for (int i = 0; i < 8; ++i) { // 64 bits = 8 octets
+    //     dataSizecount |= (static_cast<uint64_t>(bytes[i + 1]) << (8 * (7 - i)));
+    // }
+    // dataSize = dataSizecount;
+
+    // // Vérifier que la taille totale est cohérente
+    // if (bytes.size() < 9 + dataSize) {
+    //     std::cerr << "Invalid data size: " << dataSize << std::endl;
+    //     return;
+    // }
+
+    // // Extraire les données (à partir du 9ème byte jusqu'à la fin)
+    // std::vector<uint8_t> dataBytes(bytes.begin() + 9, bytes.begin() + 9 + dataSize);
+    // data = dataBytes;
+
 
 
 void Packet::setDataFromStr(const char* str) {
