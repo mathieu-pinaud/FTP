@@ -57,7 +57,7 @@ int startClient(std::string ip, int port, Packet& p) {
         return 1;
     }
     std::cout << "Client started on " << ip << ":" << port << std::endl;
-    client.sendPacket(client.getSocketFd(), p, p.getDataSize());
+    client.sendPacket(client.getSocketFd(), p);
     return 0;
 }
 

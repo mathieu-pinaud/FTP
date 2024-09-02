@@ -71,7 +71,7 @@ int startServer(std::string ip, int port) {
     //uploaded.printData();
     // std::cout << "Data mere" << std::endl;
     // Packet message(PacketType::MESSAGE, "Paquet recu");
-    // if (server.sendPacket(clientFd, message, message.getDataSize()) == false) {
+    // if (server.sendPacket(clientFd, message) == false) {
     //     std::cout << "Failed to send packet" << std::endl;
     //     return 1;
     // }

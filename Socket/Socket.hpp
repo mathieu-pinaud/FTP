@@ -27,10 +27,10 @@ public:
     bool closeSocket();
     bool connectSocket(const char* ip, int port);
     
-    bool sendPacket(int clientFd, Packet message, int size);
+    bool sendPacket(int clientFd, Packet message);
     Packet receivePacket(int fd);
 
-    void createFileFromPacket(Packet packet, std::string filename);
+    void createFileFromPacket(char *data, std::string filename, ssize_t dataSize);
 
     int getSocketFd() {return socketFd;};
     struct sockaddr_in getAddress() {return address;};
