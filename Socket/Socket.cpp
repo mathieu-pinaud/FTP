@@ -75,12 +75,82 @@ bool Socket::sendPacket(int clientFd, Packet message)
 
 
 // Fonction utilitaire pour lire les tailles en Big Endian
-uint64_t fromBigEndian(const std::vector<uint8_t>& bytes, size_t offset, size_t length) {
+uint64_t fromBigEndian(const std::vector<uint8_t> bytes, size_t offset, size_t length) {
     uint64_t value = 0;
     for (size_t i = 0; i < length; ++i) {
         value = (value << 8) | bytes[offset + i];
     }
     return value;
+}
+
+Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename, PacketType type) {
+
+    switch(type) {
+
+        case PacketType::MESSAGE: {
+            Packet p = Packet(PacketType::MESSAGE, std::string(dataBuffer,dataSize).c_str(), userName.c_str());
+            p.printData();
+            p.setData({0});
+            return p;
+            break;
+        }
+        
+        case PacketType::PASSWORD: {
+            std::cout << "password" << std::endl;
+            break;
+        }
+        
+        case PacketType::UPLOAD: {
+            std::cout << "upload" << std::endl;
+            return this->upload(dataBuffer, dataSize, userName, filename);
+            break;
+        }
+        
+        case PacketType::DOWNLOAD: {
+            std::cout << "dowload" << std::endl;
+            return this->download(std::string(dataBuffer, dataSize), userName);
+            break;
+        }
+
+        case PacketType::DELETE: {
+            return this->deleteFile(userName, std::string(dataBuffer, dataSize));
+            break;
+        }
+
+        default:
+            std::cout << "default" << std::endl;
+            break;
+    }
+
+}
+
+Packet Socket::download(std::string filenameString,std::string userString) {
+
+    if (this->isServer) {
+        std::cout << "Received download packet" << std::endl;
+        std::cout << filenameString << std::endl;
+        filenameString = "Storage/"+ userString + "/" + filenameString;
+
+        return Packet(readFileToUint8Vector(filenameString.c_str(), PacketType::UPLOAD, userString));
+    }
+}
+
+Packet Socket::upload(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename) {
+    createFileFromPacket(dataBuffer, filename, dataSize, userName);
+    return Packet(PacketType::MESSAGE, "File uploaded successfully", userName.c_str());
+}
+
+Packet Socket::deleteFile(std::string userName, std::string filename) {
+    std::string storagePath = "Storage/";
+    std::string filePath = userName;
+    filePath = filePath.append("/").append(filename);
+    if(remove(storagePath.append(filePath).c_str())) {
+        filePath = filePath.append(" deleted successfully");
+        return Packet(PacketType::MESSAGE, filePath.c_str(), userName.c_str());
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Error while deleting file", userName.c_str());
+    }
 }
 
 // Fonction pour recevoir et traiter un paquet
@@ -104,7 +174,7 @@ Packet Socket::receivePacket(int clientFd) {
 
     // Convertir les tailles depuis Big Endian
     std::vector<uint8_t> headerBytes(reinterpret_cast<uint8_t*>(&packetHeader), reinterpret_cast<uint8_t*>(&packetHeader) + sizeof(PacketHeader));
-    uint64_t userNameSize = fromBigEndian(headerBytes, 1, 4); // offset 1 pour ignorer le type du paquet
+    uint32_t userNameSize = fromBigEndian(headerBytes, 1, 4); // offset 1 pour ignorer le type du paquet
     uint64_t filenameSize = fromBigEndian(headerBytes, 5, 8); // offset 9 pour ignorer le type du paquet
     uint64_t dataSize = fromBigEndian(headerBytes, 13, 8); // offset 17 pour ignorer le type du paquet
 
@@ -202,22 +272,13 @@ Packet Socket::receivePacket(int clientFd) {
         std::cout << "Received " << totalReceived << " bytes for data" << std::endl;
     }
 
-    std::string dataString(filenameBuffer, filenameSize);
+    std::string filenameString(filenameBuffer, filenameSize);
     std::string userString(userNameBuffer, userNameSize);
-    if (packetHeader.type == PacketType::DOWNLOAD && this->isServer) {
-        std::cout << "Received download packet" << std::endl;
-        std::string dataString(dataBuffer, dataSize);
-        std::cout << dataString << std::endl;
-        dataString = "Storage/"+ userString + "/" + dataString;
-        return Packet(readFileToUint8Vector(dataString.c_str(), PacketType::UPLOAD, userString));
-    }
-
-    createFileFromPacket(dataBuffer, std::string(filenameBuffer, filenameSize), dataSize, std::string(userNameBuffer, userNameSize));
-    // Libération de la mémoire
+    Packet p = managePacket(dataBuffer, dataSize, userString, filenameString, packetHeader.type);
+    free(userNameBuffer);
     free(filenameBuffer);
     free(dataBuffer);
-
-    return Packet(static_cast<PacketType>(packetHeader.type), "filename","userName"); // Retourner un objet Packet avec les données
+    return p; // Retourner un objet Packet avec les données
 }
 
 
@@ -235,9 +296,9 @@ bool Socket::connectSocket(const char* ip, int port)
 }
 
 void Socket::createFileFromPacket(char *data, std::string filename, ssize_t dataSize, std::string userName) {
-    std::string filePath = "";
+    std::string storagePath = "";
     if(this->isServer) {
-        filePath.append("Storage/").append(userName).append("/").append(filename);
+        storagePath.append("Storage/").append(userName).append("/").append(filename);
     }
     else {
         if (!fs::exists("Downloads/")) {
@@ -246,13 +307,13 @@ void Socket::createFileFromPacket(char *data, std::string filename, ssize_t data
             }
         }
         filename=filename.substr(filename.find_last_of("/") + 1);
-        filePath.append("Downloads/").append(filename);
+        storagePath.append("Downloads/").append(filename);
     }
     std::ofstream newFile;
-    newFile.open(filePath.c_str(), std::ios_base::binary);
+    newFile.open(storagePath.c_str(), std::ios_base::binary);
     
     newFile.write(data, dataSize);
     
-    std::cout << "File successfully copied in " << filePath << std::endl;
+    std::cout << "File successfully copied in " << storagePath << std::endl;
     newFile.close();
 }

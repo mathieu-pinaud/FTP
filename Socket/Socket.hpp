@@ -17,6 +17,10 @@ private:
     struct sockaddr_in address;
     bool isServer = false;
 
+    Packet download(std::string dataString,std::string userString);
+    Packet upload(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename);
+    Packet deleteFile(std::string userName, std::string filename);
+
 public:
     Socket(): socketFd(0) {memset(&address, 0, sizeof(address));}
     ~Socket() {closeSocket();}
@@ -30,6 +34,7 @@ public:
     
     bool sendPacket(int clientFd, Packet message);
     Packet receivePacket(int fd);
+    Packet managePacket(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename, PacketType type);
 
     void createFileFromPacket(char *data, std::string filename, ssize_t dataSize, std::string userName="");
 

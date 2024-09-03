@@ -88,12 +88,6 @@ void Packet::setDataFromStr(const char* str, const char* user) {
 }
 
 void Packet::printData() {
-    std::cout << "Packet type: " << (int)this->packetType << std::endl;
-    std::cout << "Data size: " << this->dataSize << std::endl;
-    int type = (int)this->packetType;
-    if(type == 1) {
-        std::string dataStr(this->data.begin(), this->data.end());
-        std::cout << "Data: " << dataStr.c_str() << std::endl;
-    }
-    return;
+    std::string dataStr(this->data.begin() + this->userNameSize, this->data.end());
+    std::cout << "Data: " << dataStr.c_str() << std::endl;
 }

@@ -36,7 +36,7 @@ const std::string *splitIdentification(char *ipPortString) {
 
 enum TransferAction check_args(int ac, char **av) {
     if (ac != 4) {
-        std::cerr << "Usage: " << av[0] << " <ip:port> -upload/-download <filename>" << std::endl;
+        std::cerr << "Usage: " << av[0] << " <ip:port> -command <filename>" << std::endl;
         return NONE;
     }
 
@@ -52,7 +52,7 @@ enum TransferAction check_args(int ac, char **av) {
         return DELETE;
     }
     
-    std::cerr << "Usage: " << av[0] << " user@<ip:port> -upload/-download <filename>" << std::endl;
+    std::cerr << "Usage: " << av[0] << " user@<ip:port> -command <filename>" << std::endl;
     return NONE;
 }
 
@@ -68,9 +68,9 @@ int startClient(std::string ip, int port, Packet& p) {
     std::vector<uint8_t> usernameVector = p.getUserName();
     std::string username(usernameVector.begin(), usernameVector.end());
     
-    std::cout << username.c_str() <<" started on " << ip << ":" << port << std::endl;
+    std::cout << username <<" started on " << ip << ":" << port << std::endl;
     client.sendPacket(client.getSocketFd(), p);
-    if (p.getPacketType() == PacketType::DOWNLOAD) {
+    if (p.getPacketType() != PacketType::UPLOAD) {
         Packet received = client.receivePacket(client.getSocketFd());
     }
     return 0;
@@ -91,7 +91,11 @@ int main(int ac, char** av) {
     }
     
     if(action == DOWNLOAD) {
-       p= Packet(PacketType::DOWNLOAD, av[3], identification[2].c_str());
+        p = Packet(PacketType::DOWNLOAD, av[3], identification[2].c_str());
+    }
+
+    if(action == DELETE) {
+        p = Packet(PacketType::DELETE, av[3], identification[2].c_str());
     }
 
     return startClient(identification[0], std::stoi(identification[1]), p);
