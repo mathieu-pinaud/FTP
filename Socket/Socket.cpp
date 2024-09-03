@@ -1,5 +1,8 @@
 #include "Socket.hpp"
 #include <iomanip>
+#include <filesystem>
+#include <fstream>
+namespace fs = std::filesystem;
 
 bool Socket::createSocket()
 {
@@ -59,7 +62,6 @@ bool Socket::sendPacket(int clientFd, Packet message)
     std::vector<uint8_t> packet = message.toBytes();
     int packetSize = packet.size() + sizeof(PacketHeader); // Size includes header size
     ssize_t totalSent = 0;
-    std::cout << "Sent packet" << std::endl;
     while (totalSent < packetSize) {
         ssize_t bytesSent = send(clientFd, packet.data() + totalSent, packetSize - totalSent, 0);
         if (bytesSent == -1) {
@@ -68,7 +70,6 @@ bool Socket::sendPacket(int clientFd, Packet message)
         }
         totalSent += bytesSent;
     }
-    std::cout << "Sent packet" << std::endl;
     return true;
 }
 
@@ -92,37 +93,69 @@ Packet Socket::receivePacket(int clientFd) {
         ssize_t bytesReceived = recv(clientFd, reinterpret_cast<char*>(&packetHeader) + totalReceived, sizeof(PacketHeader) - totalReceived, 0);
         if (bytesReceived < 0) {
             perror("recv failed while receiving packet header");
-            return Packet(PacketType::MESSAGE, "");
+            return Packet(PacketType::MESSAGE, "","");
         }
         if (bytesReceived == 0) {
             std::cerr << "Connection closed while receiving packet header" << std::endl;
-            return Packet(PacketType::MESSAGE, "");
+            return Packet(PacketType::MESSAGE, "","");
         }
         totalReceived += bytesReceived;
     }
 
     // Convertir les tailles depuis Big Endian
     std::vector<uint8_t> headerBytes(reinterpret_cast<uint8_t*>(&packetHeader), reinterpret_cast<uint8_t*>(&packetHeader) + sizeof(PacketHeader));
-    uint64_t filenameSize = fromBigEndian(headerBytes, 1, 8); // offset 1 pour ignorer le type du paquet
-    uint64_t dataSize = fromBigEndian(headerBytes, 9, 8); // offset 9 pour ignorer le type du paquet
+    uint64_t userNameSize = fromBigEndian(headerBytes, 1, 4); // offset 1 pour ignorer le type du paquet
+    uint64_t filenameSize = fromBigEndian(headerBytes, 5, 8); // offset 9 pour ignorer le type du paquet
+    uint64_t dataSize = fromBigEndian(headerBytes, 13, 8); // offset 17 pour ignorer le type du paquet
 
     std::cout << "Received packet header" << std::endl;
     std::cout << "Packet Type: " << static_cast<int>(packetHeader.type) << std::endl;
+    std::cout << "userName size: " << userNameSize << std::endl;
     std::cout << "Filename size: " << filenameSize << std::endl;
     std::cout << "Data size: " << dataSize << std::endl;
 
     // Allocation des buffers
+
+    char *userNameBuffer = (char*)malloc(userNameSize);
+    if (userNameBuffer == nullptr) {
+        std::cerr << "Failed to allocate memory for filename buffer" << std::endl;
+        free(userNameBuffer);
+        return Packet(PacketType::MESSAGE, "","");
+    }
+
     char *dataBuffer = (char*)malloc(dataSize);
     if (dataBuffer == nullptr) {
         std::cerr << "Failed to allocate memory for data buffer" << std::endl;
-        return Packet(PacketType::MESSAGE, "");
+        return Packet(PacketType::MESSAGE, "","");
     }
 
     char *filenameBuffer = (char*)malloc(filenameSize);
     if (filenameBuffer == nullptr) {
         std::cerr << "Failed to allocate memory for filename buffer" << std::endl;
         free(dataBuffer);
-        return Packet(PacketType::MESSAGE, "");
+        return Packet(PacketType::MESSAGE, "","");
+    }
+
+    // Lire le nom de l'utilisateur
+    totalReceived = 0;
+    while (totalReceived < userNameSize) {
+        ssize_t bytesReceived = recv(clientFd, userNameBuffer + totalReceived, userNameSize - totalReceived, 0);
+        if (bytesReceived < 0) {
+            perror("recv failed while receiving username");
+            free(userNameBuffer);
+            free(filenameBuffer);
+            free(dataBuffer);
+            return Packet(PacketType::MESSAGE, "","");
+        }
+        if (bytesReceived == 0) {
+            std::cerr << "Connection closed while receiving username" << std::endl;
+            free(userNameBuffer);
+            free(filenameBuffer);
+            free(dataBuffer);
+            return Packet(PacketType::MESSAGE, "","");
+        }
+        totalReceived += bytesReceived;
+        std::cout << "Received " << totalReceived << " bytes for username" << std::endl;
     }
 
     // Lire le nom du fichier
@@ -131,21 +164,21 @@ Packet Socket::receivePacket(int clientFd) {
         ssize_t bytesReceived = recv(clientFd, filenameBuffer + totalReceived, filenameSize - totalReceived, 0);
         if (bytesReceived < 0) {
             perror("recv failed while receiving filename");
+            free(userNameBuffer);
             free(filenameBuffer);
             free(dataBuffer);
-            return Packet(PacketType::MESSAGE, "");
+            return Packet(PacketType::MESSAGE, "","");
         }
         if (bytesReceived == 0) {
             std::cerr << "Connection closed while receiving filename" << std::endl;
+            free(userNameBuffer);
             free(filenameBuffer);
             free(dataBuffer);
-            return Packet(PacketType::MESSAGE, "");
+            return Packet(PacketType::MESSAGE, "","");
         }
         totalReceived += bytesReceived;
         std::cout << "Received " << totalReceived << " bytes for filename" << std::endl;
     }
-
-    std::cout << "Received filename: " << std::string(filenameBuffer, filenameSize) << std::endl;
 
     // Lire les données
     totalReceived = 0;
@@ -153,35 +186,38 @@ Packet Socket::receivePacket(int clientFd) {
         ssize_t bytesReceived = recv(clientFd, dataBuffer + totalReceived, dataSize - totalReceived, 0);
         if (bytesReceived < 0) {
             std::cout << "recv failed while receiving data"<< std::endl;
+            free(userNameBuffer);
             free(filenameBuffer);
             free(dataBuffer);
-            return Packet(PacketType::MESSAGE, "");
+            return Packet(PacketType::MESSAGE, "","");
         }
         if (bytesReceived == 0) {
             std::cout << "Connection closed while receiving data" << std::endl;
+            free(userNameBuffer);
             free(filenameBuffer);
             free(dataBuffer);
-            return Packet(PacketType::MESSAGE, "");
+            return Packet(PacketType::MESSAGE, "","");
         }
         totalReceived += bytesReceived;
         std::cout << "Received " << totalReceived << " bytes for data" << std::endl;
     }
 
-    std::string dataString(dataBuffer, dataSize);
-    std::cout << filenameBuffer << std::endl;
-    if (packetHeader.type == PacketType::DOWNLOAD) {
+    std::string dataString(filenameBuffer, filenameSize);
+    std::string userString(userNameBuffer, userNameSize);
+    if (packetHeader.type == PacketType::DOWNLOAD && this->isServer) {
         std::cout << "Received download packet" << std::endl;
+        std::string dataString(dataBuffer, dataSize);
         std::cout << dataString << std::endl;
-        dataString = "Storage/" + dataString;
-        return Packet(readFileToUint8Vector(dataString.c_str(), PacketType::UPLOAD));
+        dataString = "Storage/"+ userString + "/" + dataString;
+        return Packet(readFileToUint8Vector(dataString.c_str(), PacketType::UPLOAD, userString));
     }
 
-    createFileFromPacket(dataBuffer, std::string(filenameBuffer, filenameSize), dataSize);
+    createFileFromPacket(dataBuffer, std::string(filenameBuffer, filenameSize), dataSize, std::string(userNameBuffer, userNameSize));
     // Libération de la mémoire
     free(filenameBuffer);
     free(dataBuffer);
 
-    return Packet(static_cast<PacketType>(packetHeader.type), "filename"); // Retourner un objet Packet avec les données
+    return Packet(static_cast<PacketType>(packetHeader.type), "filename","userName"); // Retourner un objet Packet avec les données
 }
 
 
@@ -198,21 +234,25 @@ bool Socket::connectSocket(const char* ip, int port)
     return true;
 }
 
-void Socket::createFileFromPacket(char *data, std::string filename, ssize_t dataSize) {
-    std::cout << filename << std::endl;
+void Socket::createFileFromPacket(char *data, std::string filename, ssize_t dataSize, std::string userName) {
     std::string filePath = "";
     if(this->isServer) {
-        filePath.append("Storage/").append(filename);
+        filePath.append("Storage/").append(userName).append("/").append(filename);
     }
     else {
+        if (!fs::exists("Downloads/")) {
+            if(fs::create_directory("Downloads/")) {
+                std::cout << "Directory created: " << "Downloads/" << std::endl;
+            }
+        }
+        filename=filename.substr(filename.find_last_of("/") + 1);
         filePath.append("Downloads/").append(filename);
     }
-    std::cout<< filePath << std::endl;
     std::ofstream newFile;
     newFile.open(filePath.c_str(), std::ios_base::binary);
     
     newFile.write(data, dataSize);
     
-    std::cout << "File successfully copied" << filePath << std::endl; 
+    std::cout << "File successfully copied in " << filePath << std::endl;
     newFile.close();
 }

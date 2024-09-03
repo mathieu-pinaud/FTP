@@ -31,7 +31,7 @@ public:
     bool sendPacket(int clientFd, Packet message);
     Packet receivePacket(int fd);
 
-    void createFileFromPacket(char *data, std::string filename, ssize_t dataSize);
+    void createFileFromPacket(char *data, std::string filename, ssize_t dataSize, std::string userName="");
 
     int getSocketFd() {return socketFd;};
     struct sockaddr_in getAddress() {return address;};

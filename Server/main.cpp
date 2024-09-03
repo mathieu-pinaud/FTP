@@ -64,11 +64,6 @@ int startServer(std::string ip, int port) {
     std::cout << "Client connected" << std::endl;
     Packet sent = server.receivePacket(clientFd);
     std::vector<uint8_t> data = sent.getData();
-    //print data in hex
-    std::cout << "Received data: ";
-    for (uint8_t byte : data) {
-        std::cout << std::hex << (int)byte;
-    }
     if (sent.getPacketType() == PacketType::UPLOAD) {
         //print data in hex
         std::cout << "Received download packet" << std::endl;
