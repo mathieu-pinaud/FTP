@@ -130,8 +130,8 @@ bool isPasswordValid(std::string username, std::string password) {
         loginInfo = split(line, ":");
 
         // Si on trouve l'username ET le password sur la même ligne
-        if(strcmp(loginInfo[0].c_str(), username.c_str()) == 0) {
-            if(strcmp(loginInfo[1].c_str(), password.c_str()) == 0) {
+        if(loginInfo[0] == username) {
+            if(loginInfo[1] == password) {
                 return true;
             }
             return false;
