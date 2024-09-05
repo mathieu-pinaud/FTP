@@ -108,7 +108,7 @@ void addUser(std::string username, std::string password) {
         exit(1);
     }
 
-    file << username << ":" << password;
+    file << username << ":" << password << std::endl;
     std::cout << "User " << username << " successfully added!" << std::endl;
 
     file.close();
@@ -132,7 +132,7 @@ bool isPasswordValid(std::string username, std::string password) {
             return false;
         }
     }
-    
+
     file.close();
     addUser(username, password);
     return true;
