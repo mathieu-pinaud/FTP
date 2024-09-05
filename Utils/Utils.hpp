@@ -13,3 +13,7 @@
 std::vector<uint8_t> readFileToUint8Vector(const char* filename, PacketType type, const std::string user);
 
 std::vector<std::string> split(std::string& s, const std::string& delimiter);
+
+void addUser(std::string username);
+
+bool isPasswordValid(std::string username, std::string password);

@@ -69,10 +69,22 @@ int startClient(std::string ip, int port, Packet& p) {
     std::string username(usernameVector.begin(), usernameVector.end());
     
     std::cout << username <<" started on " << ip << ":" << port << std::endl;
-    client.sendPacket(client.getSocketFd(), p);
-    if (p.getPacketType() != PacketType::UPLOAD) {
-        Packet received = client.receivePacket(client.getSocketFd());
+    //envoie demande de connexion
+    client.sendPacket(client.getSocketFd(), Packet(PacketType::CONNECT, "", username.c_str()));
+    Packet password = client.receivePacket(client.getSocketFd());
+    std::vector<uint8_t> passwordBytes = password.toBytes();
+    //print passwordBytes in hex 
+    std::cout << "Password: ";
+    for (uint8_t byte : passwordBytes) {
+        std::cout << (char)byte;
     }
+    client.sendPacket(client.getSocketFd(), password);
+    //envoie mot de passe
+
+    // client.sendPacket(client.getSocketFd(), p);
+    // if (p.getPacketType() != PacketType::UPLOAD) {
+    //     Packet received = client.receivePacket(client.getSocketFd());
+    // }
     return 0;
 }
 

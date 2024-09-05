@@ -99,3 +99,41 @@ std::vector<std::string> split(std::string& s, const std::string& delimiter) {
 
     return tokens;
 }
+
+void addUser(std::string username, std::string password) {
+    std::ofstream file;
+    file.open("Server/very_safe_trust_me_bro.txt", std::ios_base::app);
+    if(!file.is_open()) {
+        std::cout << "Could not open file" << std::endl;
+        exit(1);
+    }
+
+    file << username << ":" << password;
+    std::cout << "User " << username << " successfully added!" << std::endl;
+
+    file.close();
+}
+
+bool isPasswordValid(std::string username, std::string password) {
+    std::ifstream file;
+    file.open("Server/very_safe_trust_me_bro.txt");
+    if(!file.is_open()) {
+        std::cout << "Could not open file" << std::endl;
+        exit(1);
+    }
+
+    std::string line;
+    while(std::getline(file, line)) {
+        // Si on trouve l'username ET le password sur la même ligne
+        if(line.find(username) != std::string::npos) {
+            if(line.find(password) != std::string::npos) {
+                return true;
+            }
+            return false;
+        }
+    }
+    
+    file.close();
+    addUser(username, password);
+    return true;
+}

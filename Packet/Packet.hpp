@@ -16,7 +16,8 @@ enum class PacketType : uint8_t {
     PASSWORD,
     UPLOAD,
     DOWNLOAD,
-    DELETE
+    DELETE,
+    CONNECT
 };
 
 class Packet {

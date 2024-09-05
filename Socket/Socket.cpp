@@ -96,7 +96,7 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
         }
         
         case PacketType::PASSWORD: {
-            std::cout << "password" << std::endl;
+            return this->password(dataBuffer, dataSize, userName);
             break;
         }
         
@@ -117,12 +117,50 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
             break;
         }
 
+        case PacketType::CONNECT: {
+            return this->connectSocket(dataBuffer, dataSize, userName);
+            break;
+        }
+
         default:
             std::cout << "default" << std::endl;
             break;
     }
 
 }
+
+Packet Socket::connectSocket(char *dataBuffer, uint64_t dataSize, std::string userName) {
+    if (this->isServer) {
+        std::cout << "Received connect packet" << std::endl;
+        return Packet(PacketType::PASSWORD, "Veuillez entrer un mot de passe", userName.c_str());
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Connexion établie", userName.c_str());
+    }
+}
+
+std::string Socket::getPassword() {
+    std::string password;
+    std::cout << "Enter password: ";
+    std::cin >> password;
+    return password;
+}
+
+Packet Socket::password(char *dataBuffer, uint64_t dataSize, std::string userName) {
+    if (this->isServer) {
+        std::cout << "Received password packet" << std::endl;
+        if(isPasswordValid(userName, std::string(dataBuffer, dataSize))) {
+            return Packet(PacketType::MESSAGE, "Connexion accepté", userName.c_str());
+        }else{
+            return Packet(PacketType::MESSAGE, "Connexion refusé", userName.c_str());
+        }
+    }
+    else {
+        std::string password = this->getPassword();
+        return Packet(PacketType::PASSWORD, password.c_str(), userName.c_str());
+    }
+}
+
 
 Packet Socket::download(std::string filenameString,std::string userString) {
 
@@ -179,7 +217,7 @@ Packet Socket::receivePacket(int clientFd) {
     uint64_t dataSize = fromBigEndian(headerBytes, 13, 8); // offset 17 pour ignorer le type du paquet
 
     std::cout << "Received packet header" << std::endl;
-    std::cout << "Packet Type: " << static_cast<int>(packetHeader.type) << std::endl;
+    std::cout << "Packet Type: " << static_cast<uint8_t>(packetHeader.type) << std::endl;
     std::cout << "userName size: " << userNameSize << std::endl;
     std::cout << "Filename size: " << filenameSize << std::endl;
     std::cout << "Data size: " << dataSize << std::endl;

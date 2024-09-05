@@ -17,10 +17,13 @@ private:
     struct sockaddr_in address;
     bool isServer = false;
 
+    Packet connectSocket(char *dataBuffer, uint64_t dataSize, std::string userName);
+    Packet password(char *dataBuffer, uint64_t dataSize, std::string userName);
     Packet download(std::string dataString,std::string userString);
     Packet upload(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename);
     Packet deleteFile(std::string userName, std::string filename);
-
+    std::string getPassword();
+    
 public:
     Socket(): socketFd(0) {memset(&address, 0, sizeof(address));}
     ~Socket() {closeSocket();}
