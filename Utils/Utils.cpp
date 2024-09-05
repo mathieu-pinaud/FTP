@@ -1,6 +1,7 @@
 #include "Utils.hpp"
 #include "../Packet/Packet.hpp"
 #include <string.h>
+#include <algorithm> 
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -113,9 +114,12 @@ bool isPasswordValid(std::string username, std::string password) {
     while(std::getline(file, line)) {
         loginInfo = split(line, ":");
 
+        trim(loginInfo[0]);
+        trim(loginInfo[1]);
+
         // Si on trouve l'username ET le password sur la même ligne
-        if(loginInfo[0] == username) {
-            if(loginInfo[1] == password) {
+        if(loginInfo[0] == trim(username)) {
+            if(loginInfo[1] == trim(password)) {
                 return true;
             }
             return false;
@@ -127,4 +131,24 @@ bool isPasswordValid(std::string username, std::string password) {
     file.close();
     addUser(username, password);
     return true;
+}
+
+// trim from start (in place)
+inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+// trim from end (in place)
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+inline std::string trim(std::string &s) {
+    ltrim(s);
+    rtrim(s);
+    return s;
 }
