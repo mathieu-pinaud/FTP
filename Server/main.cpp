@@ -63,12 +63,13 @@ int startServer(std::string ip, int port) {
     }
     std::cout << "Client connected" << std::endl;
     Packet sent = server.receivePacket(clientFd);
-    if (sent.getPacketType() != PacketType::DOWNLOAD) {
-        server.sendPacket(clientFd, sent);
+    while(sent.getPacketType() != PacketType::MESSAGE) {
+        if (sent.getPacketType() != PacketType::DOWNLOAD) {
+            server.sendPacket(clientFd, sent);
+        }
+        Packet sent = server.receivePacket(clientFd);
     }
-    std::cout << "cacapipi" << std::endl;
-    sent = server.receivePacket(clientFd);
-    server.sendPacket(clientFd, sent);
+
     return 0;
 }
 

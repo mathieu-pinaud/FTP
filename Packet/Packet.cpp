@@ -76,7 +76,7 @@ void Packet::setDataFromStr(const char* str, const char* user) {
     data.clear();
     std::string userStr(user);
     for(int i = 0; user[i] != '\0'; ++i) {
-        data.push_back(user[i]);
+        userName.push_back(user[i]);
     }
     userNameSize = userStr.size();
     for(int i = 0; str[i] != '\0'; ++i) {
