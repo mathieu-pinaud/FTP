@@ -5,22 +5,6 @@
 
 namespace fs = std::filesystem;
 
-// void test(char* filename) {
-//     std::ifstream file( &filename, std::ios::binary);
-//     std::vector<uint8_t> content;
-
-
-//     if (!file.is_open()) {
-//         std::cerr << "Unable to open file: " << filename << std::endl;
-//     }
-//     if(myFile.is_open()) {
-//         while(myFile.good()) {
-//             myFile.binary();
-//             std::cout << content << std::endl;
-//         }
-//     }
-// }
-
 std::vector<uint8_t> readFileToUint8Vector(const char* filename, PacketType type, const std::string user) {
     std::ifstream file( filename, std::ios::binary);
     std::string filename_str = filename;
