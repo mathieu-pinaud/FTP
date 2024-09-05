@@ -1,6 +1,8 @@
 #include "Utils.hpp"
 #include "../Packet/Packet.hpp"
+#include <string.h>
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 // void test(char* filename) {
@@ -123,14 +125,19 @@ bool isPasswordValid(std::string username, std::string password) {
     }
 
     std::string line;
+    std::vector<std::string> loginInfo;
     while(std::getline(file, line)) {
+        loginInfo = split(line, ":");
+
         // Si on trouve l'username ET le password sur la même ligne
-        if(line.find(username) != std::string::npos) {
-            if(line.find(password) != std::string::npos) {
+        if(strcmp(loginInfo[0].c_str(), username.c_str()) == 0) {
+            if(strcmp(loginInfo[1].c_str(), password.c_str()) == 0) {
                 return true;
             }
             return false;
         }
+
+        loginInfo.clear();
     }
 
     file.close();
