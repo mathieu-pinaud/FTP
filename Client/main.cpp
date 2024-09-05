@@ -72,18 +72,18 @@ int startClient(std::string ip, int port, Packet& p) {
     //envoie demande de connexion
     client.sendPacket(client.getSocketFd(), Packet(PacketType::CONNECT, "", username.c_str()));
     //envoie mot de passe
-    std::cout << "pass demande" << std::endl;
     Packet password = client.receivePacket(client.getSocketFd());
-    std::cout << "pass entré" << std::endl;
     client.sendPacket(client.getSocketFd(), password);
 
     Packet sent = client.receivePacket(client.getSocketFd());
+    if (sent.getDataStr() == std::string("Connexion refusé")) {
+        return 1;
+    }
     client.sendPacket(client.getSocketFd(), p);
-    while(true) {
-        Packet sent = client.receivePacket(client.getSocketFd());
-        if (sent.getPacketType() != PacketType::DOWNLOAD) {
-            client.sendPacket(client.getSocketFd(), sent);
-        }
+
+    sent = client.receivePacket(client.getSocketFd());
+    if (sent.getPacketType() != PacketType::DOWNLOAD) {
+        client.sendPacket(client.getSocketFd(), sent);
     }
     return 0;
 }

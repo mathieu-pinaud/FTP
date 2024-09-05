@@ -38,10 +38,11 @@ class Packet {
         std::vector<uint8_t> toBytes();
         void fromBytes(std::vector<uint8_t> bytes);
 
-        PacketType getPacketType() { return packetType; }
-        uint32_t getDataSize() { return dataSize; }
-        std::vector<uint8_t> getData() { return data; }
-        std::vector<uint8_t> getUserName() { return userName; }
+        PacketType getPacketType() { return this->packetType; }
+        uint32_t getDataSize() { return this->dataSize; }
+        std::vector<uint8_t> getData() { return this->data; }
+        std::vector<uint8_t> getUserName() { return this->userName; }
+        std::string getDataStr();
 
         void setPacketType(const PacketType packetType) { this->packetType = packetType; }
         void setDataSize(const uint32_t dataSize) { this->dataSize = dataSize; }

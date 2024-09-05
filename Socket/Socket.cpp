@@ -59,7 +59,6 @@ bool Socket::closeSocket()
 
 bool Socket::sendPacket(int clientFd, Packet message)
 {   
-    std::cout << "Packet type sending :"<< (int)message.getPacketType() << std::endl;
     std::vector<uint8_t> packet = message.toBytes();
     int packetSize = packet.size(); // Size includes header size
     ssize_t totalSent = 0;
@@ -91,7 +90,6 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
         case PacketType::MESSAGE: {
             Packet p = Packet(PacketType::MESSAGE, std::string(dataBuffer,dataSize).c_str(), userName.c_str());
             p.printData();
-            p.setData({0});
             return p;
             break;
         }
@@ -102,13 +100,11 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
         }
         
         case PacketType::UPLOAD: {
-            std::cout << "upload" << std::endl;
             return this->upload(dataBuffer, dataSize, userName, filename);
             break;
         }
         
         case PacketType::DOWNLOAD: {
-            std::cout << "dowload" << std::endl;
             return this->download(std::string(dataBuffer, dataSize), userName);
             break;
         }
@@ -124,7 +120,6 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
         }
 
         default:
-            std::cout << "default" << std::endl;
             break;
     }
 
@@ -217,12 +212,6 @@ Packet Socket::receivePacket(int clientFd) {
     uint64_t filenameSize = fromBigEndian(headerBytes, 5, 8); // offset 9 pour ignorer le type du paquet
     uint64_t dataSize = fromBigEndian(headerBytes, 13, 8); // offset 17 pour ignorer le type du paquet
 
-    std::cout << "Received packet header" << std::endl;
-    std::cout << "Packet Type: " << (int)type << std::endl;
-    std::cout << "userName size: " << userNameSize << std::endl;
-    std::cout << "Filename size: " << filenameSize << std::endl;
-    std::cout << "Data size: " << dataSize << std::endl;
-
     // Allocation des buffers
 
     char *userNameBuffer = (char*)malloc(userNameSize);
@@ -264,7 +253,6 @@ Packet Socket::receivePacket(int clientFd) {
             return Packet(PacketType::MESSAGE, "","");
         }
         totalReceived += bytesReceived;
-        std::cout << "Received " << totalReceived << " bytes for username" << std::endl;
     }
 
     // Lire le nom du fichier
@@ -286,7 +274,6 @@ Packet Socket::receivePacket(int clientFd) {
             return Packet(PacketType::MESSAGE, "","");
         }
         totalReceived += bytesReceived;
-        std::cout << "Received " << totalReceived << " bytes for filename" << std::endl;
     }
 
     // Lire les données
@@ -308,7 +295,6 @@ Packet Socket::receivePacket(int clientFd) {
             return Packet(PacketType::MESSAGE, "","");
         }
         totalReceived += bytesReceived;
-        std::cout << "Received " << totalReceived << " bytes for data" << std::endl;
     }
 
     std::string filenameString(filenameBuffer, filenameSize);
