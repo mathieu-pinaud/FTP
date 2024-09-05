@@ -59,8 +59,9 @@ bool Socket::closeSocket()
 
 bool Socket::sendPacket(int clientFd, Packet message)
 {   
+    std::cout << "Packet type sending :"<< (int)message.getPacketType() << std::endl;
     std::vector<uint8_t> packet = message.toBytes();
-    int packetSize = packet.size() + sizeof(PacketHeader); // Size includes header size
+    int packetSize = packet.size(); // Size includes header size
     ssize_t totalSent = 0;
     while (totalSent < packetSize) {
         ssize_t bytesSent = send(clientFd, packet.data() + totalSent, packetSize - totalSent, 0);
@@ -209,15 +210,15 @@ Packet Socket::receivePacket(int clientFd) {
         }
         totalReceived += bytesReceived;
     }
-
     // Convertir les tailles depuis Big Endian
     std::vector<uint8_t> headerBytes(reinterpret_cast<uint8_t*>(&packetHeader), reinterpret_cast<uint8_t*>(&packetHeader) + sizeof(PacketHeader));
+    uint8_t type = fromBigEndian(headerBytes, 0, 1);
     uint32_t userNameSize = fromBigEndian(headerBytes, 1, 4); // offset 1 pour ignorer le type du paquet
     uint64_t filenameSize = fromBigEndian(headerBytes, 5, 8); // offset 9 pour ignorer le type du paquet
     uint64_t dataSize = fromBigEndian(headerBytes, 13, 8); // offset 17 pour ignorer le type du paquet
 
     std::cout << "Received packet header" << std::endl;
-    std::cout << "Packet Type: " << static_cast<uint8_t>(packetHeader.type) << std::endl;
+    std::cout << "Packet Type: " << (int)type << std::endl;
     std::cout << "userName size: " << userNameSize << std::endl;
     std::cout << "Filename size: " << filenameSize << std::endl;
     std::cout << "Data size: " << dataSize << std::endl;
@@ -312,7 +313,7 @@ Packet Socket::receivePacket(int clientFd) {
 
     std::string filenameString(filenameBuffer, filenameSize);
     std::string userString(userNameBuffer, userNameSize);
-    Packet p = managePacket(dataBuffer, dataSize, userString, filenameString, packetHeader.type);
+    Packet p = managePacket(dataBuffer, dataSize, userString, filenameString, static_cast<PacketType>(packetHeader.type));
     free(userNameBuffer);
     free(filenameBuffer);
     free(dataBuffer);

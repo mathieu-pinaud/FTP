@@ -33,7 +33,7 @@ void Packet::fromBytes(std::vector<uint8_t> bytes) {
     offset += 1;
 
     // 2. Lire userNameSize (4 octets, big-endian)
-    uint64_t userNameSizeCount = 0;
+    uint32_t userNameSizeCount = 0;
     for (int i = 0; i < sizeof(userNameSize); ++i) {
         userNameSizeCount |= static_cast<uint32_t>(bytes[offset + i]) << (4 * (sizeof(userNameSize) - 1 - i));
     }
@@ -74,6 +74,7 @@ void Packet::fromBytes(std::vector<uint8_t> bytes) {
 
 void Packet::setDataFromStr(const char* str, const char* user) {
     data.clear();
+    filenameSize = 0;
     std::string userStr(user);
     for(int i = 0; user[i] != '\0'; ++i) {
         userName.push_back(user[i]);
@@ -82,12 +83,11 @@ void Packet::setDataFromStr(const char* str, const char* user) {
     for(int i = 0; str[i] != '\0'; ++i) {
         data.push_back(str[i]);
     }
-    filenameSize = 0;
-    std::string fileName(str);
-    dataSize = fileName.size();
+    std::string data(str);
+    dataSize = data.size();
 }
 
 void Packet::printData() {
-    std::string dataStr(this->data.begin() + this->userNameSize, this->data.end());
+    std::string dataStr(this->data.begin(), this->data.end());
     std::cout << "Data: " << dataStr.c_str() << std::endl;
 }

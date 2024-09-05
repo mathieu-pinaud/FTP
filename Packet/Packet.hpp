@@ -22,7 +22,7 @@ enum class PacketType : uint8_t {
 
 class Packet {
     private:
-        enum PacketType packetType;
+        PacketType packetType;
         uint64_t dataSize;
         uint64_t filenameSize;
         uint32_t userNameSize;
@@ -52,7 +52,7 @@ class Packet {
 };
 
 struct PacketHeader {
-    PacketType type;
+    u_int8_t type;
     uint32_t userNameSize;
     uint64_t filenameSize;
     uint64_t dataSize;    

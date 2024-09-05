@@ -63,11 +63,9 @@ int startServer(std::string ip, int port) {
     }
     std::cout << "Client connected" << std::endl;
     Packet sent = server.receivePacket(clientFd);
-    while(sent.getPacketType() != PacketType::MESSAGE) {
-        if (sent.getPacketType() != PacketType::DOWNLOAD) {
+    while(true) {
             server.sendPacket(clientFd, sent);
-        }
-        Packet sent = server.receivePacket(clientFd);
+        sent = server.receivePacket(clientFd);
     }
 
     return 0;
