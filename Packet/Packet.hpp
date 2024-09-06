@@ -50,6 +50,8 @@ class Packet {
         void setDataFromStr(const char* str,const char* user);
 
         void printData();
+        
+        static std::string packetTypeToString(PacketType pt);
 };
 
 struct PacketHeader {

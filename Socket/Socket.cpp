@@ -1,4 +1,5 @@
 #include "Socket.hpp"
+#include "../Utils/Logger.hpp"
 #include <iomanip>
 #include <filesystem>
 #include <fstream>
@@ -70,6 +71,9 @@ bool Socket::sendPacket(int clientFd, Packet message)
         }
         totalSent += bytesSent;
     }
+
+    Logger::printLog(*this, message);
+
     return true;
 }
 
@@ -303,6 +307,9 @@ Packet Socket::receivePacket(int clientFd) {
     free(userNameBuffer);
     free(filenameBuffer);
     free(dataBuffer);
+
+    Logger::printLog(*this, p);
+
     return p; // Retourner un objet Packet avec les données
 }
 
