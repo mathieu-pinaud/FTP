@@ -29,6 +29,22 @@ void Logger::printLog(Socket socket, Packet packet) {
     file.close();
 }
 
+void Logger::printErrorLog(std::string message) {
+    std::fstream file;
+    file.open(".log", std::ios_base::app);
+    if(!file.is_open()) {
+        std::cerr << "Error while opening log file" << std::endl;
+    }
+
+    std::string msg;
+    msg += Logger::getCurrentTime();
+    msg += " [ERROR!] ";
+    msg += message;
+    file << msg << std::endl;
+    
+    file.close();
+}
+
 std::string Logger::getCurrentTime() {
     auto now = std::chrono::system_clock::now();
     std::time_t currentTime = std::chrono::system_clock::to_time_t(now);

@@ -10,5 +10,5 @@ private:
 
 public:
     static void printLog(Socket socket, Packet packet);
-
+    static void printErrorLog(std::string message);
 };
