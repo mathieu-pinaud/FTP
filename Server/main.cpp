@@ -51,11 +51,20 @@ int handleClient(int clientFd, Socket& server) {
     }
     std::cout << "Client connected" << std::endl;
     Packet sent = server.receivePacket(clientFd);
-    while(true) {
-        server.sendPacket(clientFd, sent);
-        sent = server.receivePacket(clientFd);
+    server.sendPacket(clientFd, sent);
+    sent = server.receivePacket(clientFd);
+    server.sendPacket(clientFd, sent);
+    if (sent.getDataStr() == std::string("Connexion refusé")) {
+        return 1;
     }
-    close(clientFd);
+    while (true) {
+        Packet received = server.receivePacket(clientFd);
+        server.sendPacket(clientFd, received);
+        if (received.getPacketType() == PacketType::MESSAGE) {
+            break;
+        }
+    }
+    
     return 0;
 }
 
