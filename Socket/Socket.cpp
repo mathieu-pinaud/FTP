@@ -160,13 +160,10 @@ Packet Socket::password(char *dataBuffer, uint64_t dataSize, std::string userNam
 
 Packet Socket::download(std::string filenameString,std::string userString) {
 
-    if (this->isServer) {
-        std::cout << "Received download packet" << std::endl;
-        std::cout << filenameString << std::endl;
-        filenameString = "Storage/"+ userString + "/" + filenameString;
-
-        return Packet(readFileToUint8Vector(filenameString.c_str(), PacketType::UPLOAD, userString));
-    }
+    std::cout << "Received download packet" << std::endl;
+    std::cout << filenameString << std::endl;
+    filenameString = "Storage/"+ userString + "/" + filenameString;
+    return Packet(readFileToUint8Vector(filenameString.c_str(), PacketType::UPLOAD, userString));
 }
 
 Packet Socket::upload(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename) {
