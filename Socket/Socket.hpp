@@ -22,6 +22,9 @@ private:
     Packet download(std::string dataString,std::string userString);
     Packet upload(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename);
     Packet deleteFile(std::string userName, std::string filename);
+    Packet createFolder(std::string userName, std::string filename, std::string path);
+    Packet renameFolder(std::string userName, std::string foldername, std::string path);
+    Packet removeFolder(std::string userName, std::string path);
     std::string getPassword();
     
 public:
@@ -37,7 +40,7 @@ public:
     
     bool sendPacket(int clientFd, Packet message);
     Packet receivePacket(int fd);
-    Packet managePacket(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename, PacketType type);
+    Packet managePacket(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename,std::string pathName, PacketType type);
 
     void createFileFromPacket(char *data, std::string filename, ssize_t dataSize, std::string userName="");
 

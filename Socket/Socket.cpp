@@ -83,7 +83,7 @@ uint64_t fromBigEndian(const std::vector<uint8_t> bytes, size_t offset, size_t l
     return value;
 }
 
-Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename, PacketType type) {
+Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename,std::string pathName, PacketType type) {
 
     switch(type) {
 
@@ -114,12 +114,28 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
             break;
         }
 
+        case PacketType::REMOVE: {
+            return this->removeFolder(userName, pathName);
+            break;
+        }
+
+        case PacketType::RENAME: {
+            return this->renameFolder(userName, std::string(dataBuffer, dataSize), pathName);
+            break;
+        }
+
+        case PacketType::CREATE: {
+            return this->createFolder(userName, std::string(dataBuffer, dataSize),pathName);
+            break;
+        }
+
         case PacketType::CONNECT: {
             return this->connectSocket(dataBuffer, dataSize, userName);
             break;
         }
 
         default:
+        return Packet(PacketType::MESSAGE, "Erreur", userName.c_str());
             break;
     }
 
@@ -167,6 +183,8 @@ Packet Socket::download(std::string filenameString,std::string userString) {
 
         return Packet(readFileToUint8Vector(filenameString.c_str(), PacketType::UPLOAD, userString));
     }
+
+    return Packet(PacketType::MESSAGE, "Le serveur ne peut pas download", "");
 }
 
 Packet Socket::upload(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename) {
@@ -184,6 +202,57 @@ Packet Socket::deleteFile(std::string userName, std::string filename) {
     }
     else {
         return Packet(PacketType::MESSAGE, "Error while deleting file", userName.c_str());
+    }
+}
+
+Packet Socket::removeFolder(std::string userName, std::string path) {
+    std::string storagePath = "Storage/";
+    std::string filePath = userName;
+    if(!path.empty()) {
+        filePath = filePath.append("/").append(path);
+    }
+    if(fs::remove_all(storagePath.append(filePath).c_str())) {
+        if(!path.empty()) {
+            fs::create_directory(userName);
+        }
+        
+        filePath = filePath.append(" deleted successfully");
+        return Packet(PacketType::MESSAGE, filePath.c_str(), userName.c_str());
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Error while deleting folder", userName.c_str());
+    }
+}
+
+Packet Socket::createFolder(std::string userName, std::string foldername, std::string path) {
+    std::string storagePath = "Storage/";
+    std::string filePath = userName;
+    filePath = filePath.append("/").append(path).append(foldername);
+    if (!fs::exists(filePath)) {
+        if(fs::create_directory(filePath)) {
+            std::cout << "Directory created: " << foldername << std::endl;
+            return Packet(PacketType::MESSAGE, "Directory created", userName.c_str());
+        }else {
+            return Packet(PacketType::MESSAGE, "Error while creating folder", userName.c_str());
+        }
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Error folder already created", userName.c_str());
+    }
+}
+
+Packet Socket::renameFolder(std::string userName, std::string foldername, std::string path) {
+    std::string storagePath = "Storage/";
+    std::string filePath = userName;
+    filePath = filePath.append("/").append(path);
+    std::string newFilePath = filePath.append("/").append(path).append(foldername);
+    if (fs::exists(filePath)) {
+        fs::rename(filePath, newFilePath);
+        std::cout << "Folder renamed: " << foldername << std::endl;
+        return Packet(PacketType::MESSAGE, "Folder renamed", userName.c_str());
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Error folder not found", userName.c_str());
     }
 }
 
@@ -209,7 +278,8 @@ Packet Socket::receivePacket(int clientFd) {
     std::vector<uint8_t> headerBytes(reinterpret_cast<uint8_t*>(&packetHeader), reinterpret_cast<uint8_t*>(&packetHeader) + sizeof(PacketHeader));
     uint8_t type = fromBigEndian(headerBytes, 0, 1);
     uint32_t userNameSize = fromBigEndian(headerBytes, 1, 4); // offset 1 pour ignorer le type du paquet
-    uint64_t filenameSize = fromBigEndian(headerBytes, 5, 8); // offset 9 pour ignorer le type du paquet
+    uint32_t pathSize = fromBigEndian(headerBytes, 5, 4); // offset 9 pour ignorer le type du paquet
+    uint64_t filenameSize = fromBigEndian(headerBytes, 9, 4); // offset 9 pour ignorer le type du paquet
     uint64_t dataSize = fromBigEndian(headerBytes, 13, 8); // offset 17 pour ignorer le type du paquet
 
     // Allocation des buffers
@@ -221,18 +291,31 @@ Packet Socket::receivePacket(int clientFd) {
         return Packet(PacketType::MESSAGE, "","");
     }
 
-    char *dataBuffer = (char*)malloc(dataSize);
-    if (dataBuffer == nullptr) {
-        std::cerr << "Failed to allocate memory for data buffer" << std::endl;
+    char *pathBuffer = (char*)malloc(pathSize);
+    if (pathBuffer == nullptr) {
+        std::cerr << "Failed to allocate memory for path buffer" << std::endl;
+        free(userNameBuffer);
         return Packet(PacketType::MESSAGE, "","");
     }
 
     char *filenameBuffer = (char*)malloc(filenameSize);
     if (filenameBuffer == nullptr) {
         std::cerr << "Failed to allocate memory for filename buffer" << std::endl;
-        free(dataBuffer);
+        free(pathBuffer);
+        free(userNameBuffer);
         return Packet(PacketType::MESSAGE, "","");
     }
+
+    char *dataBuffer = (char*)malloc(dataSize);
+    if (dataBuffer == nullptr) {
+        std::cerr << "Failed to allocate memory for data buffer" << std::endl;
+        free(filenameBuffer);
+        free(pathBuffer);
+        free(userNameBuffer);
+        return Packet(PacketType::MESSAGE, "","");
+    }
+
+
 
     // Lire le nom de l'utilisateur
     totalReceived = 0;
@@ -276,6 +359,27 @@ Packet Socket::receivePacket(int clientFd) {
         totalReceived += bytesReceived;
     }
 
+    // Lire le chemin du dossier
+    totalReceived = 0;
+    while (totalReceived < pathSize) {
+        ssize_t bytesReceived = recv(clientFd, pathBuffer + totalReceived, pathSize - totalReceived, 0);
+        if (bytesReceived < 0) {
+            perror("recv failed while receiving path");
+            free(userNameBuffer);
+            free(filenameBuffer);
+            free(dataBuffer);
+            return Packet(PacketType::MESSAGE, "","");
+        }
+        if (bytesReceived == 0) {
+            std::cerr << "Connection closed while receiving path" << std::endl;
+            free(userNameBuffer);
+            free(filenameBuffer);
+            free(dataBuffer);
+            return Packet(PacketType::MESSAGE, "","");
+        }
+        totalReceived += bytesReceived;
+    }
+
     // Lire les données
     totalReceived = 0;
     while (totalReceived < dataSize) {
@@ -299,7 +403,8 @@ Packet Socket::receivePacket(int clientFd) {
 
     std::string filenameString(filenameBuffer, filenameSize);
     std::string userString(userNameBuffer, userNameSize);
-    Packet p = managePacket(dataBuffer, dataSize, userString, filenameString, static_cast<PacketType>(packetHeader.type));
+    std::string pathString(pathBuffer, pathSize);
+    Packet p = managePacket(dataBuffer, dataSize, userString, filenameString, pathString, static_cast<PacketType>(packetHeader.type));
     free(userNameBuffer);
     free(filenameBuffer);
     free(dataBuffer);

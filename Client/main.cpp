@@ -34,9 +34,9 @@ const std::string *splitIdentification(char *ipPortString) {
     return args;
 }
 
-enum TransferAction check_args(int ac, char **av) {
-    if (ac != 4) {
-        std::cerr << "Usage: " << av[0] << " <ip:port> -command <filename>" << std::endl;
+enum PacketType check_args(int ac, char **av) {
+    if (ac != 4 && ac != 5) {
+        std::cerr << "Usage: " << av[0] << " <ip:port> -command <filename> <path>" << std::endl;
         return NONE;
     }
 
@@ -50,6 +50,18 @@ enum TransferAction check_args(int ac, char **av) {
 
     if(std::strcmp(av[2], "-delete") == 0) {
         return DELETE;
+    }
+
+    if(std::strcmp(av[2], "-rm") == 0) {
+        return REMOVE;
+    }
+
+    if(std::strcmp(av[2], "-create") == 0) {
+        return CREATE;
+    }
+
+    if(std::strcmp(av[2], "-rename") == 0) {
+        return RENAME;
     }
     
     std::cerr << "Usage: " << av[0] << " user@<ip:port> -command <filename>" << std::endl;
@@ -73,11 +85,15 @@ int startClient(std::string ip, int port, Packet& p) {
     client.sendPacket(client.getSocketFd(), Packet(PacketType::CONNECT, "", username.c_str()));
     //envoie mot de passe
     Packet password = client.receivePacket(client.getSocketFd());
+    std::vector<uint8_t> usernameVectorpass = password.getUserName();
     client.sendPacket(client.getSocketFd(), password);
 
     Packet sent = client.receivePacket(client.getSocketFd());
+
     if (sent.getDataStr() == std::string("Connexion refusé")) {
         return 1;
+    }else{
+        std::cout << "Connexion accepté" << std::endl;
     }
     client.sendPacket(client.getSocketFd(), p);
 
@@ -89,7 +105,7 @@ int startClient(std::string ip, int port, Packet& p) {
 }
 
 int main(int ac, char** av) {
-    TransferAction action = check_args(ac, av);
+    PacketType action = check_args(ac, av);
     if (action == NONE) {
         return 1;
     }
@@ -108,6 +124,18 @@ int main(int ac, char** av) {
 
     if(action == DELETE) {
         p = Packet(PacketType::DELETE, av[3], identification[2].c_str());
+    }
+
+    if(action == REMOVE) {
+        p = Packet(PacketType::REMOVE, av[3], identification[2].c_str(), av[4]);
+    }
+
+    if(action == RENAME) {
+        p = Packet(PacketType::RENAME, av[3], identification[2].c_str(), av[4]);
+    }
+
+    if(action == CREATE) {
+        p = Packet(PacketType::CREATE, av[3], identification[2].c_str(), av[4]);
     }
 
     return startClient(identification[0], std::stoi(identification[1]), p);

@@ -64,7 +64,7 @@ int startServer(std::string ip, int port) {
     std::cout << "Client connected" << std::endl;
     Packet sent = server.receivePacket(clientFd);
     while(true) {
-            server.sendPacket(clientFd, sent);
+        server.sendPacket(clientFd, sent);
         sent = server.receivePacket(clientFd);
     }
 
