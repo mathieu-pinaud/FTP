@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cstring>
 #include "../Socket/Socket.hpp"
+#include <thread>
 
 std::string getServerAddress() {
     struct ifaddrs *ifAddrStruct = NULL;
@@ -44,6 +45,20 @@ std::string getServerAddress() {
     return address;
 }
 
+int handleClient(int clientFd, Socket& server) {
+    if (clientFd == -1) {
+        return 1;
+    }
+    std::cout << "Client connected" << std::endl;
+    Packet sent = server.receivePacket(clientFd);
+    while(true) {
+        server.sendPacket(clientFd, sent);
+        sent = server.receivePacket(clientFd);
+    }
+    close(clientFd);
+    return 0;
+}
+
 int startServer(std::string ip, int port) {
     Socket server;
     server.setIsServer(true);
@@ -57,15 +72,21 @@ int startServer(std::string ip, int port) {
         return 1;
     }
     std::cout << "Server started on " << ip << ":" << port << std::endl;
-    int clientFd = server.acceptSocket();
-    if (clientFd == -1) {
-        return 1;
+
+    std::vector<std::thread> clientThreads;
+
+    while (true) {
+        int clientFd = server.acceptSocket();
+        if (clientFd == -1) {
+            return 1;
+        }
+        clientThreads.emplace_back(std::thread(handleClient, clientFd, std::ref(server)));
     }
-    std::cout << "Client connected" << std::endl;
-    Packet sent = server.receivePacket(clientFd);
-    while(true) {
-            server.sendPacket(clientFd, sent);
-        sent = server.receivePacket(clientFd);
+
+    for (std::thread &t : clientThreads) {
+        if (t.joinable()) {
+        t.join();
+        }
     }
 
     return 0;
