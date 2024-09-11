@@ -122,7 +122,7 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
         default:
             break;
     }
-
+    return Packet(PacketType::MESSAGE, "FAILED", userName.c_str()); 
 }
 
 Packet Socket::connectSocket(char *dataBuffer, uint64_t dataSize, std::string userName) {
