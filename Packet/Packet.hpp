@@ -43,6 +43,7 @@ class Packet {
         std::vector<uint8_t> getData() { return this->data; }
         std::vector<uint8_t> getUserName() { return this->userName; }
         std::string getDataStr();
+        std::string getUserNameStr();
 
         void setPacketType(const PacketType packetType) { this->packetType = packetType; }
         void setDataSize(const uint32_t dataSize) { this->dataSize = dataSize; }

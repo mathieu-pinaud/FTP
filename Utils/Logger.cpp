@@ -4,53 +4,60 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <ext/stdio_filebuf.h>
 
+
+Logger* Logger::instance = nullptr;
+std::mutex Logger::mutex;
+
+Logger* Logger::getInstance() {
+    std::lock_guard<std::mutex> lock(mutex);
+    if(instance == nullptr) {
+        instance = new Logger();
+        instance->file.open(".log", std::ios_base::app);
+    }
+    return instance;
+}
+
+Logger::~Logger() {
+    std::lock_guard<std::mutex> lock(mutex);
+    if(file.is_open()) {
+        file.close();
+    }
+}
 
 /**
  * Ecrit un message dans le format suivant :
  * 
  * <temps au format h:m:s> [SERVER/CLIENT] <description>
  */
-void Logger::printLog(Socket socket, Packet packet) {
-    std::fstream file;
-    file.open(".log", std::ios_base::app);
-    if(!file.is_open()) {
-        std::cerr << "Error while opening log file" << std::endl;
-    }
-
+void Logger::log(bool isServer, Packet packet) {
+    std::lock_guard<std::mutex> lock(mutex);
     std::string message;
-    message += Logger::getCurrentTime();
-    message += socket.IsServer() ? " [SERVER] " : " [CLIENT] ";
 
-    message += "à envoyé un packet de " + std::to_string(packet.getDataSize()) + " bytes de type " + Packet::packetTypeToString(packet.getPacketType());
-
-    file << message << std::endl;
-
-    file.close();
-}
-
-void Logger::printErrorLog(std::string message) {
-    std::fstream file;
-    file.open(".log", std::ios_base::app);
-    if(!file.is_open()) {
-        std::cerr << "Error while opening log file" << std::endl;
+    message += getCurrentTime();
+    if(isServer) {
+        message += " [SERVER] ";
+    } else {
+        message += " [" + packet.getUserNameStr() + "] ";
     }
 
-    std::string msg;
-    msg += Logger::getCurrentTime();
-    msg += " [ERROR!] ";
-    msg += message;
-    file << msg << std::endl;
-    
-    file.close();
+    message += "à envoyé un packet de " + std::to_string(packet.toBytes().size()) + " octets de type " + Packet::packetTypeToString(packet.getPacketType());
+
+    if(file.is_open()) {
+        file << message << "\n";
+        file.flush();
+    }
 }
 
-std::string Logger::getCurrentTime() {
-    auto now = std::chrono::system_clock::now();
-    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-    std::tm localTime = *std::localtime(&currentTime);
-    std::ostringstream oss;
-    oss << std::put_time(&localTime, "%H:%M:%S");
-    
-    return oss.str();
+void Logger::errLog(std::string message) {
+    std::lock_guard<std::mutex> lock(mutex);
+    std::string msg;
+
+    msg += getCurrentTime() + " [ERROR!] " + message;
+
+    if(file.is_open()) {
+        file << msg << "\n";
+        file.flush();
+    }
 }

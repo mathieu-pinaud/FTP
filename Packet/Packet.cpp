@@ -97,6 +97,11 @@ std::string Packet::getDataStr() {
     return dataStr;
 }   
 
+std::string Packet::getUserNameStr() {
+    std::string usernameStr(this->userName.begin(), this->userName.end());
+    return usernameStr;
+}
+
 std::string Packet::packetTypeToString(PacketType pt) {
     switch(pt) {
         case PacketType::CONNECT:
