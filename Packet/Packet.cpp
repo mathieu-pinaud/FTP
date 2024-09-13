@@ -122,6 +122,14 @@ std::string Packet::packetTypeToString(PacketType pt) {
             return "PASSWORD";
         case PacketType::UPLOAD:
             return "UPLOAD";
+        case PacketType::REMOVE:
+            return "REMOVE";
+        case PacketType::CREATE:
+            return "CREATE";
+        case PacketType::RENAME:
+            return "RENAME";
+        case PacketType::LIST:
+            return "LIST";
         default:
             break;
     }
