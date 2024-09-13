@@ -272,7 +272,7 @@ Packet Socket::deleteFile(std::string userName, std::string filename) {
     std::string storagePath = "Storage/";
     std::string filePath = userName;
     filePath = filePath.append("/").append(filename);
-    if(remove(storagePath.append(filePath).c_str())) {
+    if(remove(storagePath.append(filePath).c_str()) == 0) {
         filePath = filePath.append(" deleted successfully");
         return Packet(PacketType::MESSAGE, filePath.c_str(), userName.c_str());
     }
