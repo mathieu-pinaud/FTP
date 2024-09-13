@@ -7,6 +7,7 @@
 #include <cstring>
 #include "../Socket/Socket.hpp"
 #include <thread>
+#include "../Utils/Logger.hpp"
 
 std::string getServerAddress() {
     struct ifaddrs *ifAddrStruct = NULL;
@@ -102,6 +103,7 @@ int startServer(std::string ip, int port) {
 }
 
 int main(int ac, char **av) {
+
     if (ac != 2) {
         std::cerr << "Usage: " << av[0] << "<port>" << std::endl;
         return 1;

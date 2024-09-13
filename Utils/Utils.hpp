@@ -25,3 +25,5 @@ inline void ltrim(std::string &s);
 inline void rtrim(std::string &s);
 
 inline std::string trim(std::string &s);
+
+std::string getCurrentTime();

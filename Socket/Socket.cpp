@@ -1,14 +1,18 @@
 #include "Socket.hpp"
+#include "../Utils/Logger.hpp"
 #include <iomanip>
 #include <filesystem>
 #include <fstream>
+
 namespace fs = std::filesystem;
+
+Logger* logger = Logger::getInstance();
 
 bool Socket::createSocket()
 {
     socketFd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketFd == -1) {
-        std::cerr << "Failed to create socket" << std::endl;
+        logger->errLog("Failed to create socket");
         return false;
     }
     return true;
@@ -21,7 +25,7 @@ bool Socket::bindSocket(const char* ip, int port)
     address.sin_port = htons(port);
 
     if (bind(socketFd, (struct sockaddr*)&address, sizeof(address)) == -1) {
-        std::cerr << "Failed to bind socket" << std::endl;
+        logger->errLog("Failed to bind socket");
         return false;
     }
     return true;
@@ -30,7 +34,7 @@ bool Socket::bindSocket(const char* ip, int port)
 bool Socket::listenSocket()
 {
     if (listen(socketFd, 10) == -1) {
-        std::cerr << "Failed to listen on socket" << std::endl;
+        logger->errLog("Failed to listen to socket");
         return false;
     }
     return true;
@@ -42,7 +46,7 @@ int Socket::acceptSocket()
     socklen_t clientAddressSize = sizeof(clientAddress);
     int clientFd = accept(socketFd, (struct sockaddr*)&clientAddress, &clientAddressSize);
     if (clientFd == -1) {
-        std::cerr << "Failed to accept connection" << std::endl;
+        logger->errLog("Failed to accept connection");
         return -1;
     }
     return clientFd;
@@ -51,7 +55,7 @@ int Socket::acceptSocket()
 bool Socket::closeSocket()
 {
     if (close(socketFd) == -1) {
-        std::cerr << "Failed to close socket" << std::endl;
+        logger->errLog("Failed to close socket");
         return false;
     }
     return true;
@@ -65,11 +69,14 @@ bool Socket::sendPacket(int clientFd, Packet message)
     while (totalSent < packetSize) {
         ssize_t bytesSent = send(clientFd, packet.data() + totalSent, packetSize - totalSent, 0);
         if (bytesSent == -1) {
-            std::cerr << "Failed to send packet" << std::endl;
+            logger->errLog("Failed to send packet");
             return false;
         }
         totalSent += bytesSent;
     }
+
+    logger->log(this->isServer, message);
+
     return true;
 }
 
@@ -142,6 +149,7 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
         }
 
         default:
+            return Packet(PacketType::MESSAGE, "", "");
             break;
     }
     return Packet(PacketType::MESSAGE, "FAILED", userName.c_str()); 
@@ -277,6 +285,7 @@ Packet Socket::deleteFile(std::string userName, std::string filename) {
         return Packet(PacketType::MESSAGE, filePath.c_str(), userName.c_str());
     }
     else {
+        logger->errLog("Error while deleting file");
         return Packet(PacketType::MESSAGE, "Error while deleting file", userName.c_str());
     }
 }
@@ -289,12 +298,9 @@ Packet Socket::receivePacket(int clientFd) {
     ssize_t totalReceived = 0;
     while (totalReceived < sizeof(PacketHeader)) {
         ssize_t bytesReceived = recv(clientFd, reinterpret_cast<char*>(&packetHeader) + totalReceived, sizeof(PacketHeader) - totalReceived, 0);
-        if (bytesReceived < 0) {
+        if (bytesReceived <= 0) {
             perror("recv failed while receiving packet header");
-            return Packet(PacketType::MESSAGE, "","");
-        }
-        if (bytesReceived == 0) {
-            std::cerr << "Connection closed while receiving packet header" << std::endl;
+            logger->errLog("Connection closed while receiving packet header");
             return Packet(PacketType::MESSAGE, "","");
         }
         totalReceived += bytesReceived;
@@ -310,20 +316,20 @@ Packet Socket::receivePacket(int clientFd) {
 
     char *userNameBuffer = (char*)malloc(userNameSize);
     if (userNameBuffer == nullptr) {
-        std::cerr << "Failed to allocate memory for filename buffer" << std::endl;
+        logger->errLog("Failed to allocate memory for username buffer");
         free(userNameBuffer);
         return Packet(PacketType::MESSAGE, "","");
     }
 
     char *dataBuffer = (char*)malloc(dataSize);
     if (dataBuffer == nullptr) {
-        std::cerr << "Failed to allocate memory for data buffer" << std::endl;
+        logger->errLog("Failed to allocate memory for data buffer");
         return Packet(PacketType::MESSAGE, "","");
     }
 
     char *filenameBuffer = (char*)malloc(filenameSize);
     if (filenameBuffer == nullptr) {
-        std::cerr << "Failed to allocate memory for filename buffer" << std::endl;
+        logger->errLog("Failed to allocate memory for filename buffer");
         free(dataBuffer);
         return Packet(PacketType::MESSAGE, "","");
     }
@@ -340,7 +346,7 @@ Packet Socket::receivePacket(int clientFd) {
             return Packet(PacketType::MESSAGE, "","");
         }
         if (bytesReceived == 0) {
-            std::cerr << "Connection closed while receiving username" << std::endl;
+            logger->errLog("Connection closed while receiving username");
             free(userNameBuffer);
             free(filenameBuffer);
             free(dataBuffer);
@@ -361,7 +367,7 @@ Packet Socket::receivePacket(int clientFd) {
             return Packet(PacketType::MESSAGE, "","");
         }
         if (bytesReceived == 0) {
-            std::cerr << "Connection closed while receiving filename" << std::endl;
+            logger->errLog("Connection closed while receiving filename");
             free(userNameBuffer);
             free(filenameBuffer);
             free(dataBuffer);
@@ -382,7 +388,7 @@ Packet Socket::receivePacket(int clientFd) {
             return Packet(PacketType::MESSAGE, "","");
         }
         if (bytesReceived == 0) {
-            std::cout << "Connection closed while receiving data" << std::endl;
+            logger->errLog("Connection closed while receiving data");
             free(userNameBuffer);
             free(filenameBuffer);
             free(dataBuffer);
@@ -397,6 +403,9 @@ Packet Socket::receivePacket(int clientFd) {
     free(userNameBuffer);
     free(filenameBuffer);
     free(dataBuffer);
+
+    logger->log(this->isServer, p);
+
     return p; // Retourner un objet Packet avec les données
 }
 
