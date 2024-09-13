@@ -115,7 +115,29 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
         }
 
         case PacketType::CONNECT: {
-            return this->connectSocket(dataBuffer, dataSize, userName);
+            return this->acceptClient(dataBuffer, dataSize, userName);
+            break;
+        }
+
+        case PacketType::REMOVE: {
+            return this->removeFolder(userName, std::string(dataBuffer, dataSize));
+            break;
+        }
+
+        case PacketType::RENAME: {
+            return this->renameFolder(userName, std::string(dataBuffer, dataSize), filename);
+            break;
+        }
+
+        case PacketType::CREATE: {
+            std::cout << std::string(dataBuffer, dataSize) << std::endl;
+            std::cout << filename << std::endl;
+            return this->createFolder(userName, std::string(dataBuffer, dataSize), filename);
+            break;
+        }
+
+        case PacketType::LIST: {
+            return this->listFolder(userName, std::string(dataBuffer, dataSize));
             break;
         }
 
@@ -125,7 +147,82 @@ Packet Socket::managePacket(char *dataBuffer, uint64_t dataSize, std::string use
     return Packet(PacketType::MESSAGE, "FAILED", userName.c_str()); 
 }
 
-Packet Socket::connectSocket(char *dataBuffer, uint64_t dataSize, std::string userName) {
+Packet Socket::removeFolder(std::string userName, std::string path) {
+    std::string folderPath = "Storage/";
+    folderPath = folderPath.append(userName).append("/").append(path);
+    if(fs::remove_all(folderPath.c_str())) {
+        if(path.empty()) {
+            fs::create_directory("Storage/" + userName);
+        }
+        folderPath = folderPath.append(" deleted successfully");
+        return Packet(PacketType::MESSAGE, folderPath.c_str(), userName.c_str());
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Error while deleting folder", userName.c_str());
+    }
+}
+
+Packet Socket::createFolder(std::string userName, std::string path, std::string foldername) {
+    std::string folderPath = "Storage/";
+    folderPath.append(userName).append("/");
+    if (!path.empty()) {
+        folderPath.append(path).append("/").append(foldername);
+    } else {
+        folderPath.append(foldername);
+    }
+    if (!fs::exists(folderPath)) {
+        if(fs::create_directory(folderPath)) {
+            std::cout << "Directory created: " << foldername << std::endl;
+            return Packet(PacketType::MESSAGE, "Directory created", userName.c_str());
+        }else {
+            return Packet(PacketType::MESSAGE, "Error while creating folder", userName.c_str());
+        }
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Error folder already created", userName.c_str());
+    }
+}
+
+Packet Socket::renameFolder(std::string userName, std::string path, std::string foldername) {
+
+    if (path.empty()) 
+        return Packet(PacketType::MESSAGE, "path vide", userName.c_str());
+    std::string folderPath = "Storage/";
+    folderPath.append(userName).append("/").append(path);
+    std::string newfolderPath = folderPath;
+    size_t pos = newfolderPath.find_last_of('/');
+    if (pos != std::string::npos) {
+        newfolderPath = folderPath.substr(0, pos +  1);
+    }
+
+    newfolderPath.append(foldername);
+    if (fs::exists(folderPath)) {
+        fs::rename(folderPath, newfolderPath);
+        std::cout << "Folder renamed: " << foldername << std::endl;
+        return Packet(PacketType::MESSAGE, "Folder renamed", userName.c_str());
+    }
+    else {
+        return Packet(PacketType::MESSAGE, "Error folder not found", userName.c_str());
+    }
+}
+
+Packet Socket::listFolder(std::string userName, std::string path) {
+    std::string folderPath = "Storage/";
+    folderPath.append(userName).append("/").append(path);
+    std::string list;
+    if (!fs::exists(folderPath)) {
+        return Packet(PacketType::MESSAGE, "Error folder not found", userName.c_str());
+    }
+    for (const auto & entry : fs::directory_iterator(folderPath)) {
+        list.append(entry.path().filename().string()).append("\n");
+    }
+    if (list.empty()) {
+        list = "Folder is empty";
+    }
+    return Packet(PacketType::MESSAGE, list.c_str(), userName.c_str());
+}
+
+Packet Socket::acceptClient(char *dataBuffer, uint64_t dataSize, std::string userName) {
     if (this->isServer) {
         std::cout << "Received connect packet" << std::endl;
         return Packet(PacketType::PASSWORD, "Veuillez entrer un mot de passe", userName.c_str());

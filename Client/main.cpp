@@ -3,6 +3,7 @@
 #include <cstring>
 #include <regex>
 #include "../Socket/Socket.hpp"
+#include "../Packet/Packet.hpp"
 #include "../Utils/Utils.hpp"
 
 const std::string *splitIdentification(char *ipPortString) {
@@ -34,25 +35,41 @@ const std::string *splitIdentification(char *ipPortString) {
     return args;
 }
 
-enum TransferAction check_args(int ac, char **av) {
-    if (ac != 4) {
+enum PacketType check_args(int ac, char **av) {
+    if (ac != 3 && ac != 4 && ac != 5) {
         std::cerr << "Usage: " << av[0] << " <ip:port> -command <filename>" << std::endl;
         return NONE;
     }
 
-    if(std::strcmp(av[2], "-upload") == 0) {
+    if(std::strcmp(av[2], "-upload") == 0 && ac == 4) {
         return UPLOAD;
     }
     
-    if(std::strcmp(av[2], "-download") == 0) {
+    if(std::strcmp(av[2], "-download") == 0 && ac == 4) {
         return DOWNLOAD;
     }
 
-    if(std::strcmp(av[2], "-delete") == 0) {
+    if(std::strcmp(av[2], "-delete") == 0 && ac == 4) {
         return DELETE;
     }
+
+    if(std::strcmp(av[2], "-rm") == 0 && (ac == 4 || ac == 3)) {
+        return REMOVE;
+    }
+
+    if(std::strcmp(av[2], "-create") == 0 && (ac == 4 || ac == 5)) {
+        return CREATE;
+    }
+
+    if(std::strcmp(av[2], "-rename") == 0 && ac == 5) {
+        return RENAME;
+    }
+
+    if (std::strcmp(av[2], "-list") == 0 && (ac == 4 || ac == 3)) {
+        return LIST;
+    }
     
-    std::cerr << "Usage: " << av[0] << " user@<ip:port> -command <filename>" << std::endl;
+    std::cerr << "Usage: " << av[0] << " user@<ip:port> -command <filename> [path]" << std::endl;
     return NONE;
 }
 
@@ -89,7 +106,7 @@ int startClient(std::string ip, int port, Packet& p) {
 }
 
 int main(int ac, char** av) {
-    TransferAction action = check_args(ac, av);
+    PacketType action = check_args(ac, av);
     if (action == NONE) {
         return 1;
     }
@@ -110,5 +127,22 @@ int main(int ac, char** av) {
         p = Packet(PacketType::DELETE, av[3], identification[2].c_str());
     }
 
+    if(action == REMOVE) {
+        p = Packet(PacketType::REMOVE, ac == 3 ? "" : av[3], identification[2].c_str());
+    }
+
+    if(action == CREATE) {
+        p = Packet(PacketType::CREATE, ac == 4 ? "" : av[4], identification[2].c_str(), av[3]);
+    }
+
+    if(action == RENAME) {
+        p = Packet(PacketType::RENAME, av[4], identification[2].c_str(), av[3]);
+    }
+
+    if (action == LIST) {
+        
+        p = Packet(PacketType::LIST, ac == 3 ? "" : av[3], identification[2].c_str());
+    }
+    
     return startClient(identification[0], std::stoi(identification[1]), p);
 }

@@ -72,17 +72,23 @@ void Packet::fromBytes(std::vector<uint8_t> bytes) {
     data.assign(bytes.begin() + offset, bytes.begin() + offset + dataSize);
 }
 
-void Packet::setDataFromStr(const char* str, const char* user) {
+void Packet::setDataFromStr(const char* str, const char* user, const char* folder) {
     data.clear();
-    filenameSize = 0;
-    std::string userStr(user);
+    userName.clear();
+    filename.clear();
     for(int i = 0; user[i] != '\0'; ++i) {
         userName.push_back(user[i]);
     }
-    userNameSize = userStr.size();
+    for(int i = 0; folder[i] != '\0'; ++i) {
+        filename.push_back(folder[i]);
+    }
     for(int i = 0; str[i] != '\0'; ++i) {
         data.push_back(str[i]);
     }
+    std::string folderStr(folder);
+    filenameSize = folderStr.size();
+    std::string userStr(user);
+    userNameSize = userStr.size();
     std::string data(str);
     dataSize = data.size();
 }

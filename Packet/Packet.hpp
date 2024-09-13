@@ -4,20 +4,18 @@
 #include <vector>
 #include <sys/socket.h>
 
-enum TransferAction : uint8_t {
+enum PacketType : uint8_t {
     NONE,
-    UPLOAD,
-    DOWNLOAD,
-    DELETE
-};
-
-enum class PacketType : uint8_t {
     MESSAGE,
     PASSWORD,
     UPLOAD,
     DOWNLOAD,
     DELETE,
-    CONNECT
+    CONNECT,
+    REMOVE,
+    CREATE,
+    RENAME,
+    LIST
 };
 
 class Packet {
@@ -33,6 +31,7 @@ class Packet {
     public:
         Packet(std::vector<uint8_t> bytes) { fromBytes(bytes); }
         Packet(PacketType packetType, const char* data, const char* user) : packetType(packetType) { setDataFromStr(data,user); }
+        Packet(PacketType packetType, const char* data, const char* user, const char* foldername) : packetType(packetType) { setDataFromStr(data, user, foldername); }
         ~Packet() {};
 
         std::vector<uint8_t> toBytes();
@@ -47,7 +46,7 @@ class Packet {
         void setPacketType(const PacketType packetType) { this->packetType = packetType; }
         void setDataSize(const uint32_t dataSize) { this->dataSize = dataSize; }
         void setData(const std::vector<uint8_t> data) { this->data = data; }
-        void setDataFromStr(const char* str,const char* user);
+        void setDataFromStr(const char* str,const char* user, const char* folder="");
 
         void printData();
 };
@@ -56,5 +55,5 @@ struct PacketHeader {
     u_int8_t type;
     uint32_t userNameSize;
     uint64_t filenameSize;
-    uint64_t dataSize;    
+    uint64_t dataSize;
 }__attribute((packed));

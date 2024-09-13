@@ -17,7 +17,7 @@ private:
     struct sockaddr_in address;
     bool isServer = false;
 
-    Packet connectSocket(char *dataBuffer, uint64_t dataSize, std::string userName);
+    Packet acceptClient(char *dataBuffer, uint64_t dataSize, std::string userName);
     Packet password(char *dataBuffer, uint64_t dataSize, std::string userName);
     Packet download(std::string dataString,std::string userString);
     Packet upload(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename);
@@ -38,7 +38,11 @@ public:
     bool sendPacket(int clientFd, Packet message);
     Packet receivePacket(int fd);
     Packet managePacket(char *dataBuffer, uint64_t dataSize, std::string userName, std::string filename, PacketType type);
-
+    Packet connectSocket(char *dataBuffer, uint64_t dataSize, std::string userName);
+    Packet removeFolder(std::string userName, std::string path);
+    Packet renameFolder(std::string userName,std::string path, std::string folderName);
+    Packet createFolder(std::string userName, std::string path, std::string folderName);
+    Packet listFolder(std::string userName, std::string path);
     void createFileFromPacket(char *data, std::string filename, ssize_t dataSize, std::string userName="");
 
     int getSocketFd() {return socketFd;};
