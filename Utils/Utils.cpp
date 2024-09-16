@@ -13,7 +13,7 @@ std::vector<uint8_t> readFileToUint8Vector(const char *filename,
   std::string filename_str = filename;
   if (!file.is_open()) {
     std::cerr << "Unable to open file: " << filename << std::endl;
-    return {0};
+    exit(1);
   }
 
   if (type == PacketType::UPLOAD) {
