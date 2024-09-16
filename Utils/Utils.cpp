@@ -93,6 +93,10 @@ std::vector<std::string> split(std::string &s, const std::string &delimiter) {
 
 void addUser(std::string username, std::string password) {
   std::ofstream file;
+  if(!fs::exists("Server/very_safe_trust_me_bro.txt")) {
+    std::ofstream file("Server/very_safe_trust_me_bro.txt");
+    file.close();
+  }
   file.open("Server/very_safe_trust_me_bro.txt", std::ios_base::app);
   if (!file.is_open()) {
     std::cout << "Could not open file" << std::endl;
@@ -107,6 +111,10 @@ void addUser(std::string username, std::string password) {
 
 bool isPasswordValid(std::string username, std::string password) {
   std::ifstream file;
+  if(!fs::exists("Server/very_safe_trust_me_bro.txt")) {
+    std::ofstream file("Server/very_safe_trust_me_bro.txt");
+    file.close();
+  }
   file.open("Server/very_safe_trust_me_bro.txt");
   if (!file.is_open()) {
     std::cout << "Could not open file" << std::endl;
