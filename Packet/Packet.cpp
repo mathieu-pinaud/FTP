@@ -96,3 +96,29 @@ std::string Packet::getDataStr() {
     std::string dataStr(this->data.begin(), this->data.end());
     return dataStr;
 }   
+
+std::string Packet::getUserNameStr() {
+    std::string usernameStr(this->userName.begin(), this->userName.end());
+    return usernameStr;
+}
+
+std::string Packet::packetTypeToString(PacketType pt) {
+    switch(pt) {
+        case PacketType::CONNECT:
+            return "CONNECT";
+        case PacketType::DELETE:
+            return "DELETE";
+        case PacketType::DOWNLOAD:
+            return "DOWNLOAD";
+        case PacketType::MESSAGE:
+            return "MESSAGE";
+        case PacketType::PASSWORD:
+            return "PASSWORD";
+        case PacketType::UPLOAD:
+            return "UPLOAD";
+        default:
+            break;
+    }
+
+    return "";
+}

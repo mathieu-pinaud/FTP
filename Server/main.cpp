@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cstring>
 #include "../Socket/Socket.hpp"
+#include "../Utils/Logger.hpp"
 
 std::string getServerAddress() {
     struct ifaddrs *ifAddrStruct = NULL;
@@ -64,7 +65,7 @@ int startServer(std::string ip, int port) {
     std::cout << "Client connected" << std::endl;
     Packet sent = server.receivePacket(clientFd);
     while(true) {
-            server.sendPacket(clientFd, sent);
+        server.sendPacket(clientFd, sent);
         sent = server.receivePacket(clientFd);
     }
 
@@ -72,6 +73,7 @@ int startServer(std::string ip, int port) {
 }
 
 int main(int ac, char **av) {
+
     if (ac != 2) {
         std::cerr << "Usage: " << av[0] << "<port>" << std::endl;
         return 1;
