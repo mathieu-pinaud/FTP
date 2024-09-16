@@ -1,18 +1,20 @@
 #pragma once
 
-#include <iostream>
 #include <fstream>
-#include <string>
-#include <stdint.h>
-#include <vector>
+#include <iostream>
 #include <limits>
+#include <stdint.h>
+#include <string>
+#include <vector>
 
 #include "../Packet/Packet.hpp"
 
 // void test(char* filename);
-std::vector<uint8_t> readFileToUint8Vector(const char* filename, PacketType type, const std::string user);
+std::vector<uint8_t> readFileToUint8Vector(const char *filename,
+                                           PacketType type,
+                                           const std::string user);
 
-std::vector<std::string> split(std::string& s, const std::string& delimiter);
+std::vector<std::string> split(std::string &s, const std::string &delimiter);
 
 void addUser(std::string username);
 
